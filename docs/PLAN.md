@@ -1,6 +1,6 @@
 # 오늘 저녁 뭐 먹지 (DinnerDecision) — 개발 계획서
 
-> 버전 0.3 · 작성일 2026-11-09 · 상태: 결정 사항 반영 (서버: Cloudflare Workers)
+> 버전 0.4 · 작성일 2026-11-17 · 상태: 1단계(UI 뼈대) 코드 반영
 > UI 상세 설계는 [`UI_PLAN.md`](./UI_PLAN.md) 참고
 
 ## 변경 이력
@@ -9,6 +9,7 @@
 | 0.1 | 초안 (요구사항, 유사 앱 분석, 대안 비교) |
 | 0.2 | 결정 사항 반영: Flutter, 네이버+카카오 혼합, Firebase Functions, 기기에만 저장, iOS는 집 맥북으로 빌드 |
 | 0.3 | 중계 서버를 **Cloudflare Workers(무료)** 로 변경, Firebase는 **무료 요금제(Spark)** 로 App Check·Crashlytics만 사용 |
+| 0.4 | `app/`에 Flutter 뼈대 추가. Flutter 3.50 기준(`material_ui`), 달력은 직접 만든 위젯으로 변경, 앱 ID `kr.naturetec.dinnerdecision` 확정 |
 
 ---
 
@@ -139,13 +140,13 @@
 
 | 구분 | 기술 |
 |---|---|
-| 앱 | Flutter 3.x (stable), Dart 3 |
+| 앱 | Flutter 3.50 (stable), Dart 3.14. Material 위젯은 `material_ui` 패키지에서 가져옴 (`package:flutter/material.dart`는 3.47부터 지원 종료 예고) |
 | 상태 관리 | Riverpod |
 | 화면 이동 | go_router (하단 탭 + 상세 화면) |
 | 지도 | flutter_naver_map |
 | 위치·권한 | geolocator, permission_handler |
 | 로컬 DB | drift (SQLite) |
-| 달력 | table_calendar |
+| 달력 | 직접 만든 월 달력 위젯 (`table_calendar`는 아직 `material_ui`로 옮겨오지 않아 함께 쓸 수 없음) |
 | 사진 | image_picker (앱 폴더에 압축 저장) |
 | 외부 앱 | url_launcher |
 | 서버 통신 | dio + Firebase App Check |
@@ -389,6 +390,7 @@ settings
 | 카카오 검색 45개 제한 | 영역 분할 검색 + 캐시 |
 | 카카오 일일 호출 한도 | 서버 캐시(칸 단위 24시간), 사용자별 호출 제한 |
 | `flutter_naver_map`이 비공식 패키지 | 버전 고정, 지도 위젯을 감싸서 교체 가능하게 |
+| 패키지가 Flutter 3.50의 `material_ui`를 아직 지원하지 않을 수 있음 (`table_calendar`에서 실제로 겪음) | 패키지를 넣기 전에 `material_ui` 지원 여부 확인. `flutter_naver_map`은 3단계 시작 전에 먼저 붙여 봄. 안 되면 직접 만들거나 다른 패키지 사용 |
 | 날씨 API 장애 | 날씨 없이 다양성·거리로만 추천, "날씨 정보 없음" 표시 |
 | Workers 무료 한도 (CPU 10ms, 요청당 외부 호출 50번) | 0단계에서 실측, 칸 분할 상한 40번, 부족하면 월 5달러 유료 요금제 |
 | Workers(해외 거점 포함)에서 국내 공공 API 호출이 막히거나 느릴 가능성 | 0단계에서 확인. 문제가 되면 해당 API만 다른 경로(사내 Synology 컨테이너 등)로 분리 |
@@ -415,7 +417,7 @@ settings
 - [ ] 공공데이터포털 → 기상청 단기예보 조회서비스 활용 신청 (선택: 에어코리아)
 - [ ] Cloudflare 계정 → Workers, D1 생성, Wrangler 로그인
 - [ ] Firebase 프로젝트 (**Spark 무료 요금제**), App Check (Play Integrity / App Attest), Crashlytics
-- [ ] 앱 패키지명 결정 (예: `kr.naturetec.dinnerdecision`)
+- [x] 앱 패키지명: `kr.naturetec.dinnerdecision` (Android·iOS 같음). 네이버 지도·Firebase에 이 이름으로 등록
 - [ ] 집 맥북: Xcode, CocoaPods, Flutter 설치, iPhone 개발자 모드
 - [ ] Apple Developer Program 가입 (TestFlight 단계 전까지)
 - [ ] 카카오·네이버 약관 확인 (12장 첫 번째 위험)
