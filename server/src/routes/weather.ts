@@ -27,7 +27,10 @@ export async function handleWeather(url: URL, env: Env, nowMs: number, fetchFn?:
     .first<{ data: string }>();
   if (cached) return json(JSON.parse(cached.data));
 
-  const weather = await new KmaClient(env.KMA_SERVICE_KEY ?? '', fetchFn).current(grid, nowMs);
+  const weather = await new KmaClient(env.KMA_SERVICE_KEY ?? '', fetchFn, env.KMA_BASE_URL || undefined).current(
+    grid,
+    nowMs,
+  );
   const body: WeatherResponse = { ...weather, dust: null, attribution: '날씨: 기상청' };
   await env.DB.prepare('INSERT OR REPLACE INTO weather_cells (grid, data, expires_at) VALUES (?, ?, ?)')
     .bind(key, JSON.stringify(body), nowMs + WEATHER_TTL_MS)

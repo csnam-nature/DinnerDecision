@@ -9,7 +9,10 @@ import type { KmaGrid } from './kmaGrid';
  * - 초단기실황(getUltraSrtNcst): 지금 기온·강수 형태·1시간 강수량. 매시 정각 자료가 40분쯤 나온다.
  * - 초단기예보(getUltraSrtFcst): 앞으로 6시간의 하늘 상태. 매시 30분 자료가 45분쯤 나온다.
  */
-const BASE = 'https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0';
+export const KMA_DEFAULT_BASE = 'https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0';
+
+/** 기상청이 답하지 않을 때 기다리는 시간. 앱은 15초에 포기하므로 그보다 짧게. */
+export const KMA_TIMEOUT_MS = 8000;
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 
 export type Precipitation = 'none' | 'rain' | 'snow';
@@ -66,6 +69,8 @@ export class KmaClient {
   constructor(
     private readonly serviceKey: string,
     private readonly fetchFn: FetchLike = (input, init) => fetch(input, init),
+    private readonly base: string = KMA_DEFAULT_BASE,
+    private readonly timeoutMs: number = KMA_TIMEOUT_MS,
   ) {
     if (!serviceKey) throw new ApiError(500, 'SERVER_NOT_CONFIGURED', '기상청 키가 설정되지 않았습니다');
   }
@@ -130,15 +135,28 @@ export class KmaClient {
       nx: String(grid.nx),
       ny: String(grid.ny),
     });
+    const started = Date.now();
     let response: Response;
+    let text: string;
     try {
-      response = await this.fetchFn(`${BASE}/${operation}?serviceKey=${key}&${query}`);
+      response = await this.fetchFn(`${this.base}/${operation}?serviceKey=${key}&${query}`, {
+        signal: AbortSignal.timeout(this.timeoutMs),
+      });
+      text = await response.text();
     } catch (error) {
-      // Workers(해외 거점 포함)에서 공공데이터포털에 연결이 안 되는 경우 (PLAN.md 12장)
-      console.warn(JSON.stringify({ kmaUnreachable: String(error) }));
-      throw new ApiError(502, 'UPSTREAM_UNREACHABLE', '기상청에 연결하지 못했습니다');
+      // Workers에서 공공데이터포털에 연결이 안 되거나 답이 없는 경우 (PLAN.md 12장).
+      // 원인을 알 수 있게 걸린 시간과 오류를 남긴다. 키는 남기지 않는다.
+      const timedOut = error instanceof Error && (error.name === 'TimeoutError' || error.name === 'AbortError');
+      console.warn(
+        JSON.stringify({ kmaUnreachable: String(error), operation, ms: Date.now() - started, timedOut }),
+      );
+      throw new ApiError(
+        502,
+        'UPSTREAM_UNREACHABLE',
+        timedOut ? `기상청이 ${this.timeoutMs / 1000}초 동안 답하지 않았습니다` : '기상청에 연결하지 못했습니다',
+      );
     }
-    const text = await response.text();
+    console.log(JSON.stringify({ kma: operation, status: response.status, ms: Date.now() - started }));
     // 키 오류 등은 JSON이 아니라 XML(OpenAPI_ServiceResponse)로 온다.
     if (text.includes('SERVICE_KEY_IS_NOT_REGISTERED') || text.includes('SERVICE ACCESS DENIED')) {
       console.warn(JSON.stringify({ kmaStatus: response.status, kmaError: text.slice(0, 300) }));
