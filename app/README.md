@@ -3,7 +3,7 @@
 현재 위치 주변 식당을 날씨와 방문 기록으로 추천하는 앱입니다.
 계획은 [`docs/PLAN.md`](../docs/PLAN.md), 화면 설계는 [`docs/UI_PLAN.md`](../docs/UI_PLAN.md)에 있습니다.
 
-지금은 **3단계(지도·상세)** 진행 중입니다.
+지금은 **3단계(지도·상세)까지 완료**했습니다.
 서버 주소를 넣고 실행하면 GPS 위치와 실제 주변 식당(카카오)으로, 넣지 않으면 예시 데이터로 동작합니다.
 네이버 지도 Client ID를 넣으면 네이버 지도로, 넣지 않으면 마커만 그린 그림 지도로 보입니다.
 날씨·기록은 아직 예시 데이터입니다.
@@ -30,6 +30,12 @@ flutter run --dart-define=API_BASE_URL=https://dinner-api.<계정>.workers.dev
 
 ```bash
 flutter run --dart-define=API_BASE_URL=https://dinner-api.<계정>.workers.dev --dart-define=NAVER_MAP_CLIENT_ID=<Client ID>
+```
+
+매번 입력하기 번거로우면 `dart_defines.example.json`을 `dart_defines.json`으로 복사해 값을 넣고 실행합니다. (`dart_defines.json`은 git에 올라가지 않습니다.)
+
+```bash
+flutter run --dart-define-from-file=dart_defines.json
 ```
 
 ## 검사
