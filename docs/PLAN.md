@@ -1,6 +1,6 @@
 # 오늘 저녁 뭐 먹지 (DinnerDecision) — 개발 계획서
 
-> 버전 0.6 · 작성일 2026-11-19 · 상태: 2단계 완료(배포·실기기 확인), 3단계(지도·상세) 진행 중
+> 버전 0.7 · 작성일 2026-11-19 · 상태: 3단계(지도·상세) 완료, 다음은 4단계(기록·달력)
 > UI 상세 설계는 [`UI_PLAN.md`](./UI_PLAN.md) 참고
 
 ## 변경 이력
@@ -10,6 +10,7 @@
 | 0.2 | 결정 사항 반영: Flutter, 네이버+카카오 혼합, Firebase Functions, 기기에만 저장, iOS는 집 맥북으로 빌드 |
 | 0.3 | 중계 서버를 **Cloudflare Workers(무료)** 로 변경, Firebase는 **무료 요금제(Spark)** 로 App Check·Crashlytics만 사용 |
 | 0.4 | `app/`에 Flutter 뼈대 추가. Flutter 3.50 기준(`material_ui`), 달력은 직접 만든 위젯으로 변경, 앱 ID `kr.naturetec.dinnerdecision` 확정 |
+| 0.7 | 3단계 실기기 확인 완료. 4단계 세부 일정 추가(11.3) |
 | 0.6 | App Check(앱 인증)를 2단계 → **6단계**로 이동 (외부 배포 때 효과가 생기고 Play 배포·Apple 가입과 함께 하는 편이 효율적). 3단계 세부 일정 추가(11.2) |
 | 0.5 | `server/`에 Workers 추가(`/places`, `/region`, `/search`, App Check 검증, 호출 제한, D1 캐시). 캐시 칸을 geohash 6자리 고정 → **geohash 5자리 + 4등분 반복**으로 변경(4.2). 앱에 GPS·서버 연결. 2단계 세부 일정 추가(11.1) |
 
@@ -404,72 +405,22 @@ settings
 | 순서 | 작업 | 필요한 것 |
 |---|---|---|
 | 1 | 외부 앱 연결(F-05): 네이버 지도 앱 장소·도보 길찾기(앱 없으면 네이버 지도 웹), 카카오 장소 페이지, 전화 걸기 (`url_launcher`) | ✅ 코드·테스트 완료 |
-| 2 | 네이버 지도 연결(F-06): `AppMapView` 안쪽을 `flutter_naver_map`으로. 분류별 색 마커, 내 위치, 반경 원, 마커 누르면 미리보기. Client ID가 없으면 그림 지도로 동작 | ✅ 코드 완료 · ⏳ Naver Cloud Platform Maps **Client ID**로 실기기 확인 필요 |
+| 2 | 네이버 지도 연결(F-06): `AppMapView` 안쪽을 `flutter_naver_map`으로. 분류별 색 마커, 내 위치, 반경 원, 마커 누르면 미리보기. Client ID가 없으면 그림 지도로 동작 | ✅ 완료 |
 | 3 | 식당 상세(F-04) 다듬기: 전화번호 없는 곳은 숨김, 주소 눌러 복사, 카카오 주소 없는 곳은 카카오 버튼 숨김 | ✅ 코드·테스트 완료 |
-| 4 | 실기기 확인: 지도 표시·마커·외부 앱 연결 | Android 휴대폰 |
-| 5 | 약관 확인: 카카오 장소 데이터를 네이버 지도 위에 표시해도 되는지 (12장 첫 번째 위험) | 사용자 확인 |
+| 4 | 실기기 확인: 지도 표시·마커·외부 앱 연결 | ✅ 2026-11-19 Android 실기기 확인 |
+| 5 | 약관 확인: 카카오 장소 데이터를 네이버 지도 위에 표시해도 되는지 (12장 첫 번째 위험) | ⏳ 사용자 확인 (6단계 배포 전까지) |
 
 참고: `flutter_naver_map` 1.4.4는 예전 `package:flutter/material.dart`를 씀. 지도 본체는 문제없으나 **로고를 누르면 뜨는 정보 창**은 `material_ui` 앱에서 동작하지 않을 수 있어 로고 누르기를 끄고(`logoClickEnable: false`), 네이버 지도 출처는 설정 화면에 표시.
 
-**마일스톤**
-- M1 (2주차): 화면 이동이 되는 UI 데모
-- M2 (4주차): 실제 주변 식당 목록
-- M3 (6주차): 지도·상세 완성
-- M4 (8주차): 기록·달력 완성
-- M5 (10주차): 추천 완성
-- M6 (11주차): 베타 배포
+### 11.3 4단계 세부 일정 (기록·달력, 2주)
 
----
+| 순서 | 작업 | 기능 |
+|---|---|---|
+| 1 | 기기 DB(drift, SQLite): 식사 기록·설정·숨긴 식당 테이블과 버전 관리(마이그레이션) | 8장 |
+| 2 | 지금 메모리에만 있는 기록·설정·숨긴 식당을 DB에 저장 → 앱을 꺼도 남음. 첫 실행이면 온보딩 자동 표시 | F-07, F-13 |
+| 3 | 기록 입력·수정·삭제 완성, 사진 첨부(앱 폴더에 줄여서 저장) | F-07 |
+| 4 | 달력을 DB 기록과 연결, 지난 식당 상세는 기록에 저장해 둔 정보로 보여주기 | F-08 |
+| 5 | 백업·복원: 기록을 파일(JSON + 사진 zip)로 내보내기(공유 시트) · 가져오기 | F-12 |
+| 6 | 실기기 확인: 앱 재시작 후 기록 유지, 백업 파일로 다른 폰에 복원 | — |
 
-## 12. 위험 요소와 대응
-
-| 위험 | 대응 |
-|---|---|
-| **카카오 데이터를 네이버 지도 위에 표시하는 것이 약관상 허용되는지** | 0단계에서 카카오·네이버 약관 확인. 문제가 되면 지도도 카카오맵으로 바꿀 수 있게 지도 부분을 분리 |
-| 카카오 검색 45개 제한 | 영역 분할 검색 + 캐시 |
-| 카카오 일일 호출 한도 | 서버 캐시(칸 단위 24시간), 사용자별 호출 제한 |
-| `flutter_naver_map`이 비공식 패키지 | 버전 고정, 지도 위젯을 감싸서 교체 가능하게 |
-| 패키지가 Flutter 3.50의 `material_ui`를 아직 지원하지 않을 수 있음 (`table_calendar`에서 실제로 겪음) | 패키지를 넣기 전에 `material_ui` 지원 여부 확인. `flutter_naver_map`은 3단계 시작 전에 먼저 붙여 봄. 안 되면 직접 만들거나 다른 패키지 사용 |
-| 날씨 API 장애 | 날씨 없이 다양성·거리로만 추천, "날씨 정보 없음" 표시 |
-| Workers 무료 한도 (CPU 10ms, 요청당 외부 호출 50번) | 0단계에서 실측, 칸 분할 상한 40번, 부족하면 월 5달러 유료 요금제 |
-| Workers(해외 거점 포함)에서 국내 공공 API 호출이 막히거나 느릴 가능성 | 0단계에서 확인. 문제가 되면 해당 API만 다른 경로(사내 Synology 컨테이너 등)로 분리 |
-| 악성·과다 호출 | App Check 토큰 검증, IP별 호출 제한. 무료 요금제라 요금 폭증은 없음 (대신 한도 초과 시 서비스 중단 → 모니터링) |
-| iOS 빌드를 집에서만 할 수 있음 | 단계마다 정기적으로 빌드, iOS 설정을 미리 반영, 필요하면 Codemagic |
-| 위치정보·개인정보 | 좌표 미저장, 개인정보처리방침, 권한 사용 이유 문구 |
-
----
-
-## 13. 2차 이후 기능
-- 클라우드 동기화(Firebase Auth + Firestore, 무료 범위에서 시작), 여러 기기 사용
-- 통계 화면 (월별 분류 비율, 자주 간 곳)
-- 같이 먹을 사람과 투표로 결정
-- 가격대 필터, 영업 중만 보기
-- LLM으로 자연스러운 추천 문장
-- 홈 화면 위젯 "오늘의 추천"
-- 점심/저녁 따로 추천
-
----
-
-## 14. 0단계 준비물 체크리스트
-- [x] 카카오 디벨로퍼스 앱 생성 → REST API 키 (서버용), **[제품 설정] → [카카오맵] 사용 설정 ON**
-- [ ] Naver Cloud Platform → Maps (Mobile Dynamic Map) Client ID, 앱 패키지명·번들 ID 등록
-- [ ] 공공데이터포털 → 기상청 단기예보 조회서비스 활용 신청 (선택: 에어코리아)
-- [x] Cloudflare 계정 → Workers, D1 생성, Wrangler 로그인
-- [ ] Firebase 프로젝트 (**Spark 무료 요금제**), App Check (Play Integrity / App Attest), Crashlytics
-- [x] 앱 패키지명: `kr.naturetec.dinnerdecision` (Android·iOS 같음). 네이버 지도·Firebase에 이 이름으로 등록
-- [ ] 집 맥북: Xcode, CocoaPods, Flutter 설치, iPhone 개발자 모드
-- [ ] Apple Developer Program 가입 (TestFlight 단계 전까지)
-- [ ] 카카오·네이버 약관 확인 (12장 첫 번째 위험)
-
----
-
-## 참고 자료
-- 카카오 로컬 API: https://developers.kakao.com/docs/latest/ko/local/dev-guide
-- flutter_naver_map: https://pub.dev/packages/flutter_naver_map
-- 네이버 지도 URL 스킴: https://guide.ncloud-docs.com/docs/maps-url-scheme
-- 기상청 단기예보 조회서비스: https://www.data.go.kr/data/15084084/openapi.do
-- Cloudflare Workers 한도: https://developers.cloudflare.com/workers/platform/limits/
-- Cloudflare Workers 요금: https://developers.cloudflare.com/workers/platform/pricing/
-- Cloudflare D1: https://developers.cloudflare.com/d1/
-- Firebase App Check (자체 서버에서 토큰 검증): https://firebase.google.com/docs/app-check/custom-resource-backend
-- Firebase 요금: https://firebase.google.com/pricing
+예시 데이터 모드(서버 주소 없음)에서는 지금처럼 예시 기록을 보여주고, 서버 모드에서는 빈 기록에서 시작한다.
