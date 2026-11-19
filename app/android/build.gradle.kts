@@ -2,6 +2,8 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        // 네이버 지도 SDK (flutter_naver_map). 앱 모듈이 이 저장소에서 받아야 한다.
+        maven { url = uri("https://repository.map.naver.com/archive/maven") }
     }
 }
 

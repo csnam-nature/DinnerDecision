@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../core/geo.dart';
 import '../../domain/models/cuisine.dart';
 import '../theme/app_colors.dart';
+import 'naver_map_view.dart';
 
 class MapMarker {
   const MapMarker({
@@ -26,10 +27,10 @@ class MapMarker {
   final bool faded;
 }
 
-/// 지도 자리.
+/// 지도. 화면들은 이 위젯의 입력값만 안다.
 ///
-/// 지금은 마커 위치만 보여주는 그림이다. 3단계에서 이 위젯의 안쪽만
-/// flutter_naver_map으로 바꾸면 되도록, 화면들은 이 위젯의 입력값만 안다.
+/// 네이버 지도 Client ID를 넣어 빌드하면([useNaverMap]) 네이버 지도로,
+/// 아니면 마커 위치만 보여주는 그림으로 그린다. 테스트도 그림으로 돈다.
 class AppMapView extends StatelessWidget {
   const AppMapView({
     super.key,
@@ -42,7 +43,11 @@ class AppMapView extends StatelessWidget {
     this.radiusM,
     this.selectedId,
     this.onMarkerTap,
+    this.interactive = true,
   });
+
+  /// main()에서 네이버 지도 초기화에 성공하면 true로 바꾼다.
+  static bool useNaverMap = false;
 
   final double centerLat;
   final double centerLng;
@@ -60,8 +65,12 @@ class AppMapView extends StatelessWidget {
   final String? selectedId;
   final ValueChanged<String>? onMarkerTap;
 
+  /// false면 움직일 수 없는 작은 지도 (식당 상세).
+  final bool interactive;
+
   @override
   Widget build(BuildContext context) {
+    if (useNaverMap) return NaverMapView(config: this);
     final colors = context.colors;
     return LayoutBuilder(
       builder: (context, box) {

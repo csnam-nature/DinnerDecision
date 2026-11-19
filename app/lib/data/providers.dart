@@ -12,6 +12,7 @@ import '../domain/models/weather.dart';
 import '../domain/recommend/recommend_engine.dart';
 import 'api/api_client.dart';
 import 'app_config.dart';
+import 'external_launcher.dart';
 import 'repositories/location_repository.dart';
 import 'repositories/place_repository.dart';
 import 'repositories/weather_repository.dart';
@@ -34,6 +35,15 @@ final apiClientProvider = Provider<ApiClient?>(
 /// 예시 데이터로 동작하는지. 화면의 '예시 데이터' 안내에 쓴다.
 final usesSampleDataProvider = Provider<bool>(
   (ref) => ref.watch(apiClientProvider) == null,
+);
+
+/// 다른 앱·웹 열기 (네이버 지도, 카카오 장소, 전화).
+final externalLauncherProvider = Provider<ExternalLauncher>(
+  (ref) => const UrlLauncherExternal(),
+);
+
+final restaurantLinksProvider = Provider<RestaurantLinks>(
+  (ref) => RestaurantLinks(ref.watch(externalLauncherProvider)),
 );
 
 final recommendEngineProvider = Provider<RecommendEngine>(
