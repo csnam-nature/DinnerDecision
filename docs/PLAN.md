@@ -384,8 +384,8 @@ settings
 | 1주차 | `/region`(동 이름), `/search`(위치 직접 설정), IP별 호출 제한, App Check 토큰 검증(off/monitor/enforce) | ✅ 코드·테스트 완료 |
 | 1주차 | 앱: 서버 클라이언트(dio), `ApiPlaceRepository`, 서버 주소 없으면 예시 데이터로 동작 | ✅ 코드·테스트 완료 |
 | 2주차 | 앱: GPS(geolocator)·권한 처리, 위치 검색 화면, 오류 안내(위치·인터넷·호출 제한) | ✅ 코드·테스트 완료 |
-| 2주차 | **0단계 준비물로 실제 연결**: 카카오 REST 키, Cloudflare 계정·D1 생성, 첫 배포 | ⏳ 키·계정 필요 |
-| 2주차 | 실기기 확인: Android 위치 권한, 실제 카카오 분류로 `cuisine_mapping.json` 보정, CPU 10ms·호출 수 실측 | ⏳ 배포 후 |
+| 2주차 | **0단계 준비물로 실제 연결**: 카카오 REST 키(카카오맵 사용 설정 ON), Cloudflare 계정·D1 생성, 첫 배포 | ✅ 2026-11-19 배포, Android 실기기(SM-G981N)에서 GPS·동 이름·주변 목록 확인 |
+| 2주차 | 실제 카카오 분류로 `cuisine_mapping.json` 보정, CPU 10ms·호출 수 실측 | ⏳ 다음 작업 |
 | 2주차 | Firebase(Spark)·App Check를 앱에 붙이고 서버 `APP_CHECK_MODE`를 monitor → enforce | ⏳ Firebase 프로젝트 필요 |
 | 2주차 | 집 맥북 iOS 빌드 (위치 권한 문구 확인) | ⏳ |
 
@@ -431,10 +431,10 @@ settings
 ---
 
 ## 14. 0단계 준비물 체크리스트
-- [ ] 카카오 디벨로퍼스 앱 생성 → REST API 키 (서버용)
+- [x] 카카오 디벨로퍼스 앱 생성 → REST API 키 (서버용), **[제품 설정] → [카카오맵] 사용 설정 ON**
 - [ ] Naver Cloud Platform → Maps (Mobile Dynamic Map) Client ID, 앱 패키지명·번들 ID 등록
 - [ ] 공공데이터포털 → 기상청 단기예보 조회서비스 활용 신청 (선택: 에어코리아)
-- [ ] Cloudflare 계정 → Workers, D1 생성, Wrangler 로그인
+- [x] Cloudflare 계정 → Workers, D1 생성, Wrangler 로그인
 - [ ] Firebase 프로젝트 (**Spark 무료 요금제**), App Check (Play Integrity / App Attest), Crashlytics
 - [x] 앱 패키지명: `kr.naturetec.dinnerdecision` (Android·iOS 같음). 네이버 지도·Firebase에 이 이름으로 등록
 - [ ] 집 맥북: Xcode, CocoaPods, Flutter 설치, iPhone 개발자 모드
