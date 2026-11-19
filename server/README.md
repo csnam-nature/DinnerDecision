@@ -64,6 +64,12 @@
 
 Node.js 22.13 이상이 필요합니다.
 
+> 아래 `npm` 명령은 모두 **`server` 폴더 안에서** 실행합니다. 저장소 맨 위 폴더에는 `package.json`이 없어서 `ENOENT` 오류가 납니다.
+>
+> ```bash
+> cd server
+> ```
+
 ```bash
 npm install
 ```
