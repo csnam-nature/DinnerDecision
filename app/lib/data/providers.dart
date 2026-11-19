@@ -215,18 +215,32 @@ class LocationController extends Notifier<LocationState> {
   }
 
   /// GPS로 현재 위치를 찾는다. 실패하면 이전 위치를 그대로 두고 이유를 남긴다.
-  Future<LocationFailure?> locateMe() async {
+  Future<LocationFailure?>? _running;
+
+  /// 이미 찾는 중이면 새로 시작하지 않고 그 결과를 같이 기다린다.
+  /// (권한 창이 떠 있는데 또 요청하면 geolocator가 오류를 낸다.)
+  Future<LocationFailure?> locateMe() =>
+      _running ??= _locate().whenComplete(() => _running = null);
+
+  Future<LocationFailure?> _locate() async {
     state = LocationState(location: state.location, locating: true);
+    LocationFailure failure;
     try {
       final found = await ref.read(locationRepositoryProvider).current();
       if (!ref.mounted) return null;
       state = LocationState(location: found);
       return null;
     } on LocationException catch (e) {
-      if (!ref.mounted) return e.failure;
-      state = LocationState(location: state.location, failure: e.failure);
-      return e.failure;
+      failure = e.failure;
+    } on Object catch (e) {
+      // 예상하지 못한 오류(플랫폼 오류 등)도 '찾는 중'에 멈춰 있지 않게 실패로 둔다.
+      debugPrint('위치 찾기 실패: $e');
+      failure = LocationFailure.timeout;
     }
+    if (ref.mounted) {
+      state = LocationState(location: state.location, failure: failure);
+    }
+    return failure;
   }
 
   void select(AppLocation location) =>

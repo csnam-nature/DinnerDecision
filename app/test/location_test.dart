@@ -38,8 +38,54 @@ class _SearchableLocations extends FakeLocationRepository {
   ];
 }
 
+/// current()가 몇 번 불렸는지 세고, 정해 두면 예상 밖 오류를 낸다.
+class _CountingLocations extends FakeLocationRepository {
+  _CountingLocations({this.crash = false});
+
+  final bool crash;
+  var calls = 0;
+
+  @override
+  Future<AppLocation> current() async {
+    calls++;
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+    if (crash) throw StateError('플랫폼 오류');
+    return sampleLocations.first;
+  }
+}
+
 void main() {
   group('LocationController', () {
+    test('찾는 중에 또 부르면 새로 찾지 않고 같은 결과를 기다린다', () async {
+      final repo = _CountingLocations();
+      final container = ProviderContainer(
+        overrides: serverMode(location: repo),
+      );
+      addTearDown(container.dispose);
+      container.listen(locationStateProvider, (_, _) {});
+      final controller = container.read(locationStateProvider.notifier);
+      // 첫 실행 안내에서 '허용'을 누르면 시작할 때 찾기와 버튼의 찾기가 겹친다.
+      await Future.wait([controller.locateMe(), controller.locateMe()]);
+      await Future<void>.delayed(const Duration(milliseconds: 30));
+      expect(repo.calls, 1);
+      expect(container.read(locationProvider), sampleLocations.first);
+    });
+
+    test('예상하지 못한 오류가 나도 찾는 중에 멈추지 않는다', () async {
+      final container = ProviderContainer(
+        overrides: serverMode(location: _CountingLocations(crash: true)),
+      );
+      addTearDown(container.dispose);
+      container.listen(locationStateProvider, (_, _) {});
+      final failure = await container
+          .read(locationStateProvider.notifier)
+          .locateMe();
+      expect(failure, isNotNull);
+      final state = container.read(locationStateProvider);
+      expect(state.locating, isFalse);
+      expect(state.failure, isNotNull);
+    });
+
     test('서버 모드에서는 시작하자마자 GPS로 위치를 찾는다', () async {
       final container = ProviderContainer(
         overrides: serverMode(location: const FakeLocationRepository()),
