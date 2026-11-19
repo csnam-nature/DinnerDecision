@@ -8,6 +8,7 @@ import 'package:dinner_decision/data/local/stored_data.dart';
 import 'package:dinner_decision/data/providers.dart';
 import 'package:dinner_decision/data/repositories/location_repository.dart';
 import 'package:dinner_decision/data/repositories/place_repository.dart';
+import 'package:dinner_decision/domain/models/app_location.dart';
 import 'package:dinner_decision/domain/models/cuisine.dart';
 import 'package:dinner_decision/domain/models/restaurant.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -49,16 +50,19 @@ const farAway = Restaurant(
 );
 
 void main() {
-  List<Override> serverMode(LocalStore store, StoredData data) => [
+  List<Override> serverMode(
+    LocalStore store,
+    StoredData data, {
+    LocationRepository location = const FakeLocationRepository(),
+    PlaceRepository? places,
+  }) => [
     appConfigProvider.overrideWithValue(loadTestConfig()),
     clockProvider.overrideWithValue(() => testToday),
     apiClientProvider.overrideWithValue(ApiClient(baseUrl: 'https://api.test')),
     placeRepositoryProvider.overrideWithValue(
-      FakePlaceRepository(delay: Duration.zero),
+      places ?? FakePlaceRepository(delay: Duration.zero),
     ),
-    locationRepositoryProvider.overrideWithValue(
-      const FakeLocationRepository(),
-    ),
+    locationRepositoryProvider.overrideWithValue(location),
     localStoreProvider.overrideWithValue(store),
     storedDataProvider.overrideWith(() => StoredDataController(data)),
   ];
@@ -160,8 +164,77 @@ void main() {
     );
     addTearDown(container.dispose);
     container.listen(placeByIdProvider('far-1'), (_, _) {});
+    await container.read(locationStateProvider.notifier).locateMe();
     final place = await container.read(placeByIdProvider('far-1').future);
     expect(place?.restaurant.name, '부산 돼지국밥');
     expect(place!.distanceM, greaterThan(300000)); // 서울에서 부산
   });
+
+  test('인터넷과 위치 권한이 없어도 기록한 식당의 상세는 열린다', () async {
+    final container = ProviderContainer(
+      overrides: [
+        ...serverMode(
+          MemoryStore(),
+          const StoredData(
+            onboardingDone: true,
+            restaurants: {'far-1': farAway},
+          ),
+          places: _OfflinePlaces(),
+          location: const FakeLocationRepository(
+            failure: LocationFailure.denied,
+          ),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    container.listen(placeByIdProvider('far-1'), (_, _) {});
+    await container.read(locationStateProvider.notifier).locateMe();
+    final place = await container.read(placeByIdProvider('far-1').future);
+    expect(place?.restaurant.name, '부산 돼지국밥');
+    expect(place!.distanceM, isNull); // 위치를 모르면 거리는 비워 둔다
+  });
+
+  testWidgets('안내 화면에서 나중에를 누르면 GPS를 찾지 않는다', (tester) async {
+    final locations = _CountingLocations();
+    await pumpApp(tester, [
+      ...serverMode(MemoryStore(), const StoredData(), location: locations),
+    ]);
+    await tester.tap(find.text('나중에 (위치 직접 설정)'));
+    await tester.pumpAndSettle();
+    expect(find.text('위치 설정'), findsOneWidget);
+    expect(locations.calls, 0);
+  });
+
+  testWidgets('안내 화면에서 허용하면 GPS를 한 번만 찾는다', (tester) async {
+    final locations = _CountingLocations();
+    await pumpApp(tester, [
+      ...serverMode(MemoryStore(), const StoredData(), location: locations),
+    ]);
+    await tester.tap(find.text('위치 권한 허용하기'));
+    await tester.pumpAndSettle();
+    expect(locations.calls, 1);
+    expect(find.text('성수 할매순대국'), findsOneWidget);
+  });
+}
+
+class _OfflinePlaces implements PlaceRepository {
+  @override
+  Future<List<Restaurant>> fetchNearby({
+    required double lat,
+    required double lng,
+    required int radiusM,
+  }) async => throw const ApiException(ApiException.network, '오프라인');
+
+  @override
+  Future<Restaurant?> findById(String id) async => null;
+}
+
+class _CountingLocations extends FakeLocationRepository {
+  var calls = 0;
+
+  @override
+  Future<AppLocation> current() {
+    calls++;
+    return super.current();
+  }
 }

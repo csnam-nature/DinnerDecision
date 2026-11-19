@@ -281,29 +281,51 @@ Future<AppLocation> _requireLocation(Ref ref) {
   return Completer<AppLocation>().future;
 }
 
-/// 설정의 '예시 날씨'. 실제 날씨를 붙이면 없앤다.
-class SampleWeatherController extends Notifier<SampleWeather> {
+/// 설정 › 개발용의 '예시 날씨'. null이면 실제 날씨(서버 `/weather`).
+/// 예시 데이터 모드는 서버가 없으니 비 오는 날로 시작한다.
+/// 서버 모드에서도 디버그 빌드에서는 예시 날씨로 바꿔 추천을 시험해 볼 수 있다.
+class SampleWeatherController extends Notifier<SampleWeather?> {
   @override
-  SampleWeather build() => SampleWeather.rain;
+  SampleWeather? build() =>
+      ref.watch(usesSampleDataProvider) ? SampleWeather.rain : null;
 
-  void select(SampleWeather value) => state = value;
+  void select(SampleWeather? value) => state = value;
 }
 
 final sampleWeatherProvider =
-    NotifierProvider<SampleWeatherController, SampleWeather>(
+    NotifierProvider<SampleWeatherController, SampleWeather?>(
       SampleWeatherController.new,
     );
 
-final weatherRepositoryProvider = Provider<WeatherRepository>(
-  (ref) => FakeWeatherRepository(ref.watch(sampleWeatherProvider).weather),
-);
+/// 서버 날씨 저장소. 캐시를 들고 있으므로 예시 날씨를 바꿔도 다시 만들지 않는다.
+final _apiWeatherRepositoryProvider = Provider<ApiWeatherRepository?>((ref) {
+  final client = ref.watch(apiClientProvider);
+  return client == null
+      ? null
+      : ApiWeatherRepository(client, clock: ref.watch(clockProvider));
+});
 
-final weatherProvider = FutureProvider<Weather>((ref) async {
+final weatherRepositoryProvider = Provider<WeatherRepository>((ref) {
+  final sample = ref.watch(sampleWeatherProvider);
+  final api = ref.watch(_apiWeatherRepositoryProvider);
+  if (sample != null || api == null) {
+    return FakeWeatherRepository((sample ?? SampleWeather.rain).weather);
+  }
+  return api;
+});
+
+/// 지금 날씨. 날씨를 못 받으면 null이고, 추천은 날씨 없이 다양성·거리로만 한다 (PLAN.md 12장).
+final weatherProvider = FutureProvider<Weather?>((ref) async {
   final location = await _requireLocation(ref);
-  return ref
-      .watch(weatherRepositoryProvider)
-      .fetchCurrent(lat: location.lat, lng: location.lng);
-}, retry: retryNetworkErrors);
+  try {
+    return await ref
+        .watch(weatherRepositoryProvider)
+        .fetchCurrent(lat: location.lat, lng: location.lng);
+  } on ApiException catch (e) {
+    debugPrint('날씨를 받지 못함: $e');
+    return null;
+  }
+});
 
 // ── 주변 식당 ─────────────────────────────────────────
 
@@ -332,22 +354,43 @@ final nearbyPlacesProvider = FutureProvider<List<NearbyPlace>>((ref) async {
     ..sort((a, b) => a.distanceM.compareTo(b.distanceM));
 }, retry: retryNetworkErrors);
 
-/// 식당 상세 화면용. 현재 위치에서의 거리를 함께 준다.
-final placeByIdProvider = FutureProvider.family<NearbyPlace?, String>((
+/// 식당 상세 화면에 보여줄 식당. 위치를 모르면 거리는 null.
+class PlaceDetail {
+  const PlaceDetail({required this.restaurant, this.distanceM});
+
+  final Restaurant restaurant;
+  final int? distanceM;
+}
+
+/// 식당 상세 화면용.
+///
+/// 기록하거나 숨긴 식당은 기기에 저장해 둔 정보로 바로 보여준다. 인터넷이 없거나
+/// 위치 권한이 없어도 달력에서 지난 식당을 열 수 있어야 하기 때문이다.
+/// 그 밖의 식당은 주변 목록에서 찾는다.
+final placeByIdProvider = FutureProvider.family<PlaceDetail?, String>((
   ref,
   id,
 ) async {
-  final location = await _requireLocation(ref);
+  final location = ref.watch(locationProvider);
+  int? distance(Restaurant r) =>
+      location == null ? null : _roundedDistance(location, r);
+
+  final known = ref.watch(knownRestaurantsProvider)[id];
+  if (known != null) {
+    // 이번에 받은 주변 목록에 있으면 그쪽이 더 최신이다 (메모리에서 찾을 뿐 서버를 부르지 않는다).
+    final fresh = await ref.read(placeRepositoryProvider).findById(id);
+    final restaurant = fresh ?? known;
+    return PlaceDetail(restaurant: restaurant, distanceM: distance(restaurant));
+  }
+
+  final here = await _requireLocation(ref);
   // 주변 목록을 먼저 받아야 저장소가 식당을 알고 있다.
   await ref.watch(nearbyPlacesProvider.future);
-  final restaurant =
-      await ref.watch(placeRepositoryProvider).findById(id) ??
-      // 지금 주변에 없으면 기록할 때 저장해 둔 정보로 보여준다.
-      ref.watch(knownRestaurantsProvider)[id];
+  final restaurant = await ref.watch(placeRepositoryProvider).findById(id);
   if (restaurant == null) return null;
-  return NearbyPlace(
+  return PlaceDetail(
     restaurant: restaurant,
-    distanceM: _roundedDistance(location, restaurant),
+    distanceM: _roundedDistance(here, restaurant),
   );
 }, retry: retryNetworkErrors);
 
