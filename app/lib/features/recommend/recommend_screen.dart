@@ -310,7 +310,7 @@ class _BigCard extends ConsumerWidget {
                 const SizedBox(width: Gap.sm),
                 Expanded(
                   child: Text(
-                    '${r.cuisine.label} · ${r.subCategory} · ${formatDistance(pick.place.distanceM)}',
+                    '${r.categoryLabel} · ${formatDistance(pick.place.distanceM)}',
                     style: context.text.bodySmall,
                   ),
                 ),

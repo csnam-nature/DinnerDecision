@@ -106,10 +106,7 @@ class _Detail extends ConsumerWidget {
                   children: [
                     CuisineIcon(r.cuisine, size: 30),
                     const SizedBox(width: Gap.sm),
-                    Text(
-                      '${r.cuisine.label} · ${r.subCategory}',
-                      style: context.text.bodySmall,
-                    ),
+                    Text(r.categoryLabel, style: context.text.bodySmall),
                   ],
                 ),
                 const SizedBox(height: Gap.sm),

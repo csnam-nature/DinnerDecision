@@ -45,10 +45,7 @@ class RestaurantTile extends StatelessWidget {
                     runSpacing: 2,
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      Text(
-                        '${r.cuisine.label} · ${r.subCategory}',
-                        style: context.text.bodySmall,
-                      ),
+                      Text(r.categoryLabel, style: context.text.bodySmall),
                       if (visited != null && visited <= 14)
                         _VisitBadge(days: visited),
                     ],
