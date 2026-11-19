@@ -4,6 +4,8 @@ export interface Env {
 
   /** 카카오 REST API 키 (Secret). */
   KAKAO_REST_KEY: string;
+  /** 공공데이터포털 기상청 단기예보 일반 인증키 (Secret). */
+  KMA_SERVICE_KEY?: string;
   /** IP 해시용 소금값 (Secret, 선택). */
   RATE_LIMIT_SALT?: string;
 

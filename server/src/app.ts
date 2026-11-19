@@ -6,6 +6,7 @@ import { checkRateLimit } from './lib/rateLimit';
 import { handlePlaces } from './routes/places';
 import { handleRegion } from './routes/region';
 import { handleSearch } from './routes/search';
+import { handleWeather } from './routes/weather';
 
 export const API_VERSION = '1';
 
@@ -36,6 +37,8 @@ export async function handleRequest(request: Request, env: Env, deps: Deps): Pro
         return await handleRegion(url, env, deps.fetchFn);
       case '/search':
         return await handleSearch(url, env, deps.fetchFn);
+      case '/weather':
+        return await handleWeather(url, env, nowMs, deps.fetchFn);
       default:
         throw new ApiError(404, 'NOT_FOUND', '없는 주소입니다');
     }
