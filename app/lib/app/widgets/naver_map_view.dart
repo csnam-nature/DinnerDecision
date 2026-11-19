@@ -116,6 +116,7 @@ class _NaverMapViewState extends State<NaverMapView> {
         final marker = NMarker(
           id: m.id,
           position: NLatLng(m.lat, m.lng),
+          icon: _pin,
           iconTintColor: colors.cuisine(m.cuisine),
           size: style.size,
           alpha: style.alpha,
@@ -195,6 +196,10 @@ class _NaverMapViewState extends State<NaverMapView> {
     );
   }
 }
+
+/// 검은 핀 + 가운데 흰 점. 네이버 지도는 아이콘에 색을 덧입히므로
+/// 검은 부분은 분류 색이 되고 흰 점은 그대로 남는다.
+const _pin = NOverlayImage.fromAssetImage('assets/map/marker.png');
 
 class _MarkerStyle {
   const _MarkerStyle(this.size, this.alpha, this.zIndex);

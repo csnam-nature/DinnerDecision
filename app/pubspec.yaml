@@ -60,6 +60,8 @@ flutter:
   # 분류 규칙과 날씨 규칙 (PLAN.md 4.3, 9.3). 코드를 건드리지 않고 고칠 수 있도록 JSON으로 둔다.
   assets:
     - assets/config/
+    # 지도 마커. 검은 핀이라 분류 색을 덧입히면 그 색 그대로 보인다.
+    - assets/map/
 
   # Pretendard (SIL Open Font License 1.1, assets/fonts/Pretendard-LICENSE.txt)
   fonts:
