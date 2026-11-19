@@ -3,8 +3,9 @@
 현재 위치 주변 식당을 날씨와 방문 기록으로 추천하는 앱입니다.
 계획은 [`docs/PLAN.md`](../docs/PLAN.md), 화면 설계는 [`docs/UI_PLAN.md`](../docs/UI_PLAN.md)에 있습니다.
 
-지금은 **2단계(서버 + 주변 목록)** 입니다.
+지금은 **3단계(지도·상세)** 진행 중입니다.
 서버 주소를 넣고 실행하면 GPS 위치와 실제 주변 식당(카카오)으로, 넣지 않으면 예시 데이터로 동작합니다.
+네이버 지도 Client ID를 넣으면 네이버 지도로, 넣지 않으면 마커만 그린 그림 지도로 보입니다.
 날씨·기록은 아직 예시 데이터입니다.
 
 ## 실행
@@ -23,6 +24,12 @@ flutter run
 
 ```bash
 flutter run --dart-define=API_BASE_URL=https://dinner-api.<계정>.workers.dev
+```
+
+네이버 지도까지 쓰려면 Client ID도 넣습니다 (Naver Cloud Platform → Maps → Application, Dynamic Map).
+
+```bash
+flutter run --dart-define=API_BASE_URL=https://dinner-api.<계정>.workers.dev --dart-define=NAVER_MAP_CLIENT_ID=<Client ID>
 ```
 
 ## 검사
@@ -54,8 +61,8 @@ flutter test
 | ~~주변 식당~~ | ✅ 서버 `/places` (`ApiPlaceRepository`) | — | 2 |
 | ~~현재 위치~~ | ✅ GPS(`geolocator`) + 동 이름 `/region` + 위치 검색 `/search` | — | 2 |
 | 앱 인증 | 서버 `APP_CHECK_MODE=off` | Firebase App Check 토큰을 `ApiClient(appCheckToken:)`에 연결 | 2~3 (Firebase 준비 후) |
-| 지도 | 마커만 그리는 그림 | `AppMapView` 안쪽을 `flutter_naver_map`으로 교체 | 3 |
-| 네이버 지도·전화·카카오 장소 열기 | 안내 문구만 표시 | `url_launcher` 연결 | 3 |
+| 지도 | ✅ `NAVER_MAP_CLIENT_ID`가 있으면 네이버 지도(`NaverMapView`), 없으면 그림 지도 | 실기기 확인 | 3 |
+| ~~네이버 지도·전화·카카오 장소 열기~~ | ✅ `url_launcher` (`RestaurantLinks`). 네이버 지도 앱이 없으면 네이버 지도 웹 | — | 3 |
 | 식사 기록·설정 저장 | 메모리 (앱을 끄면 사라짐) | `MealLogController`, `SettingsController`를 drift DB로 교체 | 4 |
 | 사진, 백업·복원 | 안내 문구만 표시 | `image_picker`, 파일 내보내기 | 4 |
 | 날씨 | 설정의 '예시 날씨'에서 선택 (디버그 빌드에서만 보임) | `WeatherRepository` 구현을 서버 `/weather` 호출로 교체 | 5 |
@@ -76,5 +83,7 @@ flutter test
 - Flutter 3.50부터 Material 위젯은 `package:material_ui/material_ui.dart`에서 가져옵니다.
   패키지를 추가할 때 `material_ui`를 지원하는지 먼저 확인하세요. (`table_calendar`는 지원하지 않아 달력을 직접 만들었습니다.)
 - `geolocator`의 웹용 하위 패키지는 예전 `package:flutter/material.dart`를 쓰지만, 이 앱은 Android·iOS만 대상이라 영향이 없습니다.
+- `flutter_naver_map` 1.4.4도 예전 material을 씁니다. 지도 본체는 문제없지만, 로고를 누르면 뜨는 정보 창은 `material_ui` 앱에서 동작하지 않아 로고 누르기를 껐습니다(`logoClickEnable: false`).
+- Android는 네이버 지도 SDK 저장소(`repository.map.naver.com`)를 `android/build.gradle.kts`에 넣었습니다.
 - 글꼴은 Pretendard입니다 (SIL Open Font License, `assets/fonts/Pretendard-LICENSE.txt`).
 - 앱 ID는 Android·iOS 모두 `kr.naturetec.dinnerdecision` 입니다.

@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
@@ -10,6 +11,7 @@ import '../../app/widgets/common_widgets.dart';
 import '../../app/widgets/cuisine_widgets.dart';
 import '../../core/dates.dart';
 import '../../core/geo.dart';
+import '../../data/external_launcher.dart';
 import '../../data/providers.dart';
 import '../../domain/models/restaurant.dart';
 import '../meal_log_edit/meal_log_draft.dart';
@@ -86,6 +88,7 @@ class _Detail extends ConsumerWidget {
               meLat: location?.lat,
               meLng: location?.lng,
               selectedId: r.id,
+              interactive: false,
               markers: [
                 MapMarker(
                   id: r.id,
@@ -117,20 +120,26 @@ class _Detail extends ConsumerWidget {
                   text:
                       '${formatDistance(place.distanceM)} · 걸어서 ${walkMinutes(place.distanceM)}분',
                 ),
-                _InfoLine(icon: Icons.home_outlined, text: r.roadAddress),
                 _InfoLine(
-                  icon: Icons.call_outlined,
-                  text: r.phone,
-                  onTap: () =>
-                      showNotReady(context, '전화 걸기는 아직 연결 전이에요 · ${r.phone}'),
+                  icon: Icons.home_outlined,
+                  text: r.roadAddress,
+                  onTap: () => _copyAddress(context, r.roadAddress),
+                  semanticHint: '주소 복사',
                 ),
+                if (r.phone.isNotEmpty)
+                  _InfoLine(
+                    icon: Icons.call_outlined,
+                    text: r.phone,
+                    onTap: () => _open(context, ref, (l) => l.call(r)),
+                    semanticHint: '전화 걸기',
+                  ),
                 const SizedBox(height: Gap.md),
                 Row(
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: () =>
-                            showNotReady(context, '네이버 지도 앱 열기는 아직 연결 전이에요'),
+                            _open(context, ref, (l) => l.openNaverMap(r)),
                         icon: const Icon(Icons.map_outlined, size: 20),
                         label: const Text('네이버 지도'),
                       ),
@@ -139,18 +148,19 @@ class _Detail extends ConsumerWidget {
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: () =>
-                            showNotReady(context, '네이버 지도 길찾기는 아직 연결 전이에요'),
+                            _open(context, ref, (l) => l.openWalkRoute(r)),
                         icon: const Icon(Icons.near_me_outlined, size: 20),
                         label: const Text('길찾기'),
                       ),
                     ),
                   ],
                 ),
-                TextButton(
-                  onPressed: () =>
-                      showNotReady(context, '카카오 장소 페이지 열기는 아직 연결 전이에요'),
-                  child: const Text('카카오 장소 정보 보기 ›'),
-                ),
+                if (r.kakaoUrl != null)
+                  TextButton(
+                    onPressed: () =>
+                        _open(context, ref, (l) => l.openKakaoPlace(r)),
+                    child: const Text('카카오 장소 정보 보기 · 메뉴·사진 ›'),
+                  ),
               ],
             ),
           ),
@@ -203,30 +213,63 @@ class _Detail extends ConsumerWidget {
   }
 }
 
+/// 다른 앱을 열고, 열지 못했으면 알려 준다.
+Future<void> _open(
+  BuildContext context,
+  WidgetRef ref,
+  Future<OpenResult> Function(RestaurantLinks links) action,
+) async {
+  final messenger = ScaffoldMessenger.of(context);
+  final result = await action(ref.read(restaurantLinksProvider));
+  if (result == OpenResult.failed) {
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(const SnackBar(content: Text('열 수 있는 앱이 없어요')));
+  }
+}
+
+void _copyAddress(BuildContext context, String address) {
+  Clipboard.setData(ClipboardData(text: address));
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(const SnackBar(content: Text('주소를 복사했어요')));
+}
+
 class _InfoLine extends StatelessWidget {
-  const _InfoLine({required this.icon, required this.text, this.onTap});
+  const _InfoLine({
+    required this.icon,
+    required this.text,
+    this.onTap,
+    this.semanticHint,
+  });
 
   final IconData icon;
   final String text;
   final VoidCallback? onTap;
 
+  /// 화면 읽기 프로그램에 알려 줄 누르면 하는 일.
+  final String? semanticHint;
+
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Row(
-          children: [
-            Icon(icon, size: 20, color: context.colors.textSecondary),
-            const SizedBox(width: Gap.sm),
-            Expanded(
-              child: Text(
-                text,
-                style: context.text.bodyMedium?.copyWith(fontSize: 15),
+    return Semantics(
+      onTapHint: semanticHint,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Row(
+            children: [
+              Icon(icon, size: 20, color: context.colors.textSecondary),
+              const SizedBox(width: Gap.sm),
+              Expanded(
+                child: Text(
+                  text,
+                  style: context.text.bodyMedium?.copyWith(fontSize: 15),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
