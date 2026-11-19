@@ -7,6 +7,7 @@ import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/widgets/common_widgets.dart';
 import '../../app/widgets/cuisine_widgets.dart';
+import '../../app/widgets/load_error.dart';
 import '../../app/widgets/restaurant_tile.dart';
 import '../../core/geo.dart';
 import '../../data/providers.dart';
@@ -21,7 +22,8 @@ class NearbyScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final location = ref.watch(locationProvider);
+    final locationState = ref.watch(locationStateProvider);
+    final location = locationState.location;
     final view = ref.watch(nearbyViewProvider);
     final weather = ref.watch(weatherProvider).value;
 
@@ -36,7 +38,8 @@ class NearbyScreen extends ConsumerWidget {
             children: [
               Flexible(
                 child: Text(
-                  location.name,
+                  location?.name ??
+                      (locationState.locating ? '위치 찾는 중…' : '위치 설정'),
                   style: context.text.titleLarge,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -186,15 +189,13 @@ class _NearbyList extends ConsumerWidget {
     final lastVisit = ref.watch(lastVisitDaysProvider);
     final radiusM = ref.watch(settingsProvider.select((s) => s.radiusM));
     final cuisine = ref.watch(nearbyViewProvider.select((v) => v.cuisine));
+    final sample = ref.watch(usesSampleDataProvider);
 
     return list.when(
       loading: () => const ListSkeleton(),
-      error: (error, _) => StateView(
-        emoji: '📡',
-        title: '식당 목록을 불러오지 못했어요',
-        message: '인터넷 연결을 확인한 뒤 다시 시도해 주세요',
-        actionLabel: '다시 시도',
-        onAction: () => ref.invalidate(nearbyPlacesProvider),
+      error: (error, _) => LoadErrorView(
+        error: error,
+        onRetry: () => ref.invalidate(nearbyPlacesProvider),
       ),
       data: (places) {
         if (places.isEmpty) {
@@ -220,7 +221,9 @@ class _NearbyList extends ConsumerWidget {
                 return Padding(
                   padding: const EdgeInsets.all(Gap.lg),
                   child: Text(
-                    '줄을 왼쪽으로 밀면 숨길 수 있어요 · 지금은 예시 데이터예요',
+                    sample
+                        ? '줄을 왼쪽으로 밀면 숨길 수 있어요 · 지금은 예시 데이터예요'
+                        : '줄을 왼쪽으로 밀면 숨길 수 있어요 · 장소 정보: 카카오',
                     style: context.text.labelSmall,
                   ),
                 );

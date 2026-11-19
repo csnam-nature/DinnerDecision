@@ -83,8 +83,8 @@ class _Detail extends ConsumerWidget {
               centerLng: r.lng,
               // 내 위치가 작은 지도 안에 들어오도록 거리에 맞춰 넓힌다.
               spanM: (place.distanceM * 1.3).clamp(150, 1500).toDouble(),
-              meLat: location.lat,
-              meLng: location.lng,
+              meLat: location?.lat,
+              meLng: location?.lng,
               selectedId: r.id,
               markers: [
                 MapMarker(
