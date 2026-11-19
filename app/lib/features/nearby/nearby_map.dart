@@ -131,7 +131,7 @@ class _PreviewCard extends StatelessWidget {
                     children: [
                       Text(r.name, style: context.text.titleMedium),
                       Text(
-                        '${r.cuisine.label} · ${r.subCategory} · ${formatDistance(place.distanceM)}',
+                        '${r.categoryLabel} · ${formatDistance(place.distanceM)}',
                         style: context.text.bodySmall,
                       ),
                     ],

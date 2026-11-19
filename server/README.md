@@ -112,7 +112,10 @@ npm run dev
    npm run db:migrate:remote
    ```
 
-4. 비밀값 넣기 (카카오 디벨로퍼스 → 내 애플리케이션 → 앱 키 → REST API 키)
+4. 비밀값 넣기 (카카오 디벨로퍼스 → 내 애플리케이션 → 앱 키 → **REST API 키**)
+
+   먼저 같은 앱의 왼쪽 메뉴 **[앱] → [제품 설정] → [카카오맵]** 에서 **사용 설정을 ON** 해야 합니다.
+   꺼져 있으면 카카오가 모든 호출을 거절하고 서버는 `UPSTREAM_AUTH`(502)를 돌려줍니다.
 
    ```bash
    npx wrangler secret put KAKAO_REST_KEY
@@ -133,6 +136,15 @@ npm run dev
    ```bash
    flutter run --dart-define=API_BASE_URL=https://dinner-api.<계정>.workers.dev
    ```
+
+## 문제 해결
+
+| 증상 | 원인 | 해결 |
+|---|---|---|
+| `npm` 실행 시 `ENOENT ... package.json` | 저장소 맨 위 폴더에서 실행 | `server` 폴더에서 실행 |
+| `/region` 등이 `INTERNAL`(500) | 원격 D1에 테이블 없음 | `npm run db:migrate:remote` |
+| `SERVER_NOT_CONFIGURED` | `KAKAO_REST_KEY` secret 없음 | `npx wrangler secret put KAKAO_REST_KEY` |
+| `UPSTREAM_AUTH` | 카카오맵 사용 설정 꺼짐 또는 REST API 키가 아님 | 위 4번 확인. `npx wrangler tail`에 카카오 오류 내용이 찍힘 |
 
 ## 설정값 (`wrangler.toml`의 `[vars]`)
 

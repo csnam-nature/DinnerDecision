@@ -155,6 +155,12 @@ export class KakaoClient {
     const response = await this.fetchFn(url, {
       headers: { Authorization: `KakaoAK ${this.restKey}` },
     });
+    if (!response.ok) {
+      // 카카오가 거절한 이유(예: 카카오맵 사용 설정 꺼짐)를 `wrangler tail`로 볼 수 있게 남긴다.
+      // 카카오 오류 본문에는 요청 좌표가 들어 있지 않다.
+      const detail = (await response.text().catch(() => '')).slice(0, 300);
+      console.warn(JSON.stringify({ kakaoStatus: response.status, kakaoError: detail }));
+    }
     if (response.status === 401 || response.status === 403) {
       throw new ApiError(502, 'UPSTREAM_AUTH', '카카오 키를 확인해야 합니다');
     }
