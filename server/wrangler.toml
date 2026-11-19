@@ -1,0 +1,29 @@
+# Cloudflare Workers 설정 (PLAN.md 6장). 비밀값은 여기에 넣지 않는다.
+#   npx wrangler secret put KAKAO_REST_KEY
+#   npx wrangler secret put RATE_LIMIT_SALT
+name = "dinner-api"
+main = "src/index.ts"
+compatibility_date = "2026-11-01"
+workers_dev = true
+
+[vars]
+# off → monitor → enforce 순서로 올린다. 앱에 App Check를 붙이기 전까지는 off.
+APP_CHECK_MODE = "off"
+FIREBASE_PROJECT_NUMBER = ""
+FIREBASE_APP_IDS = ""
+KAKAO_CALL_BUDGET = "40"
+RATE_LIMIT_PER_MINUTE = "30"
+
+# npx wrangler d1 create dinner-cache 로 만든 뒤 나오는 database_id 를 넣는다.
+[[d1_databases]]
+binding = "DB"
+database_name = "dinner-cache"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"
+
+# 하루 한 번 지난 캐시 지우기 (UTC 19:00 = 한국 04:00)
+[triggers]
+crons = ["0 19 * * *"]
+
+[observability]
+enabled = true

@@ -20,6 +20,9 @@ class NearbyMap extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final location = ref.watch(locationProvider);
+    if (location == null) {
+      return const StateView(emoji: '📍', title: '위치를 확인하는 중이에요');
+    }
     final radiusM = ref.watch(settingsProvider.select((s) => s.radiusM));
     final avoidDays = ref.watch(
       settingsProvider.select((s) => s.avoidRestaurantDays),
@@ -128,7 +131,7 @@ class _PreviewCard extends StatelessWidget {
                     children: [
                       Text(r.name, style: context.text.titleMedium),
                       Text(
-                        '${r.cuisine.label} · ${r.subCategory} · ${formatDistance(place.distanceM)}',
+                        '${r.categoryLabel} · ${formatDistance(place.distanceM)}',
                         style: context.text.bodySmall,
                       ),
                     ],

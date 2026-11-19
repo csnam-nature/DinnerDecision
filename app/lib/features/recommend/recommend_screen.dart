@@ -96,7 +96,7 @@ class _StartView extends ConsumerWidget {
             children: [
               Text('지금', style: context.text.labelSmall),
               Text(
-                '${weather?.summaryWithDust ?? '날씨를 확인하는 중…'} · 📍 ${location.name}',
+                '${weather?.summaryWithDust ?? '날씨를 확인하는 중…'} · 📍 ${location?.name ?? '위치 확인 중'}',
                 style: context.text.bodyMedium,
               ),
               const SizedBox(height: Gap.sm),
@@ -310,7 +310,7 @@ class _BigCard extends ConsumerWidget {
                 const SizedBox(width: Gap.sm),
                 Expanded(
                   child: Text(
-                    '${r.cuisine.label} · ${r.subCategory} · ${formatDistance(pick.place.distanceM)}',
+                    '${r.categoryLabel} · ${formatDistance(pick.place.distanceM)}',
                     style: context.text.bodySmall,
                   ),
                 ),

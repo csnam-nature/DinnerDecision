@@ -33,6 +33,12 @@ class Restaurant {
   final double lat;
   final double lng;
   final String? kakaoUrl;
+
+  /// 화면에 보이는 분류. 예: '한식 · 해장국'. 세부 분류가 없거나 같으면 '한식'만.
+  String get categoryLabel =>
+      subCategory.isEmpty || subCategory == cuisine.label
+      ? cuisine.label
+      : '${cuisine.label} · $subCategory';
 }
 
 /// 현재 위치에서의 거리를 함께 가진 식당.

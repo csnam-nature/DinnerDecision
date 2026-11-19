@@ -31,7 +31,7 @@ class ExcludedScreen extends ConsumerWidget {
                 return ListTile(
                   leading: CuisineIcon(r.cuisine, size: 36),
                   title: Text(r.name),
-                  subtitle: Text('${r.cuisine.label} · ${r.subCategory}'),
+                  subtitle: Text(r.categoryLabel),
                   trailing: OutlinedButton(
                     onPressed: () =>
                         ref.read(excludedProvider.notifier).restore(r.id),
