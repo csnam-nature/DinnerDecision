@@ -3,10 +3,13 @@ import 'package:dinner_decision/data/api/api_client.dart';
 import 'package:dinner_decision/data/providers.dart';
 import 'package:dinner_decision/data/repositories/location_repository.dart';
 import 'package:dinner_decision/data/repositories/place_repository.dart';
+import 'package:dinner_decision/data/repositories/weather_repository.dart';
+import 'package:dinner_decision/domain/models/weather.dart';
 import 'package:dinner_decision/data/sample/sample_data.dart';
 import 'package:dinner_decision/domain/models/app_location.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -203,4 +206,82 @@ void main() {
       expect(find.text('두 글자 이상 입력해 주세요'), findsOneWidget);
     });
   });
+
+  group('날씨 (5단계)', () {
+    test('서버 모드는 실제 날씨를 쓰고, 못 받으면 null', () async {
+      final container = ProviderContainer(
+        overrides: [
+          ...serverMode(location: const FakeLocationRepository()),
+          weatherRepositoryProvider.overrideWithValue(_FailingWeather()),
+        ],
+      );
+      addTearDown(container.dispose);
+      container.listen(weatherProvider, (_, _) {});
+      expect(container.read(sampleWeatherProvider), isNull); // 실제 날씨
+      expect(await container.read(weatherProvider.future), isNull);
+    });
+
+    test('서버 모드에서도 개발용 예시 날씨로 바꿀 수 있다', () async {
+      final container = ProviderContainer(
+        overrides: serverMode(location: const FakeLocationRepository()),
+      );
+      addTearDown(container.dispose);
+      container.listen(weatherProvider, (_, _) {});
+      container.read(sampleWeatherProvider.notifier).select(SampleWeather.hot);
+      final weather = await container.read(weatherProvider.future);
+      expect(weather?.tempRounded, 31);
+    });
+  });
+  group('날씨 다시 받기', () {
+    test('받은 날씨는 15분 뒤, 못 받았으면 2분 뒤에 다시 받는다', () {
+      fakeAsync((async) {
+        final weather = _CountingWeather();
+        final container = ProviderContainer(
+          overrides: [
+            ...serverMode(location: const FakeLocationRepository()),
+            weatherRepositoryProvider.overrideWithValue(weather),
+          ],
+        );
+        container.listen(weatherProvider, (_, _) {});
+        // 위치 찾기 → 날씨 받기까지 (Riverpod은 다시 계산을 타이머로 예약하기도 한다)
+        async.elapse(const Duration(seconds: 1));
+        expect(weather.calls, 1);
+        expect(container.read(weatherProvider).value, isNull); // 처음엔 실패
+
+        async.elapse(const Duration(minutes: 2));
+        expect(weather.calls, 2);
+        expect(container.read(weatherProvider).value?.tempRounded, 20);
+
+        async.elapse(const Duration(minutes: 14));
+        expect(weather.calls, 2);
+        async.elapse(const Duration(minutes: 2));
+        expect(weather.calls, 3);
+        container.dispose();
+      });
+    });
+  });
+}
+
+/// 처음 한 번은 실패하고, 그다음부터는 20℃를 준다.
+class _CountingWeather implements WeatherRepository {
+  var calls = 0;
+
+  @override
+  Future<Weather> fetchCurrent({
+    required double lat,
+    required double lng,
+  }) async {
+    calls++;
+    if (calls == 1) throw const ApiException(ApiException.network, '오프라인');
+    return const Weather(tempC: 20);
+  }
+}
+
+class _FailingWeather implements WeatherRepository {
+  @override
+  Future<Weather> fetchCurrent({
+    required double lat,
+    required double lng,
+  }) async =>
+      throw const ApiException('UPSTREAM_UNREACHABLE', '기상청에 연결하지 못했습니다');
 }

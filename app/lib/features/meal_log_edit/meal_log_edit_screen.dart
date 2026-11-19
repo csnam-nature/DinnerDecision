@@ -7,6 +7,7 @@ import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/widgets/common_widgets.dart';
 import '../../app/widgets/cuisine_widgets.dart';
+import '../../app/widgets/weather_text.dart';
 import '../../core/dates.dart';
 import '../../core/geo.dart';
 import '../../data/device_files.dart';
@@ -368,7 +369,9 @@ class _MealLogEditScreenState extends ConsumerState<MealLogEditScreen> {
             child: Padding(
               padding: const EdgeInsets.only(top: 10),
               child: Text(
-                _weatherText.isEmpty ? '날씨를 확인하는 중…' : '$_weatherText (자동)',
+                _weatherText.isEmpty
+                    ? weatherLine(ref.watch(weatherProvider))
+                    : '$_weatherText (자동)',
                 style: context.text.bodyMedium,
               ),
             ),

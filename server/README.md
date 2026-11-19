@@ -14,6 +14,23 @@
 | `GET /places?lat=&lng=&radius=` | 반경(100~2000m) 안 음식점. 가까운 순 |
 | `GET /region?lat=&lng=` | 동 이름 (예: 성수동2가) |
 | `GET /search?query=` | 위치 직접 설정용 주소·장소 검색 |
+| `GET /weather?lat=&lng=` | 지금 날씨 (기상청 초단기실황 + 초단기예보) |
+
+`/weather` 응답:
+
+```json
+{
+  "tempC": 8.7, "precipitation": "rain", "sky": "cloudy",
+  "rain1hMm": 1.5, "humidity": 90, "observedAt": "2026-11-19T18:00+09:00",
+  "dust": null, "attribution": "날씨: 기상청"
+}
+```
+
+- `precipitation`: `none` · `rain`(비, 비/눈, 빗방울) · `snow`(눈, 눈날림)
+- `sky`: `clear`(맑음) · `partly`(구름많음) · `cloudy`(흐림), 예보를 못 받으면 `null`
+- 위경도를 기상청 격자(5km)로 바꿔 격자 단위로 20분 저장합니다. 좌표는 저장하지 않습니다.
+- 실황은 매시 정각 자료가 40분쯤, 예보는 매시 30분 자료가 45분쯤 나옵니다. 발표 직후라 자료가 없으면 한 시간 전 자료를 씁니다.
+- `dust`(미세먼지)는 아직 붙이지 않아 항상 `null`입니다.
 
 `/places` 응답:
 
@@ -45,9 +62,10 @@
 | `OUT_OF_SERVICE_AREA` | 400 | 국내 좌표가 아님 |
 | `APP_CHECK_FAILED` | 401 | 앱 인증 실패 (`APP_CHECK_MODE=enforce`일 때) |
 | `RATE_LIMITED` | 429 | 같은 IP에서 1분에 30번 넘게 부름 |
-| `UPSTREAM_AUTH` | 502 | 카카오 키 문제 |
-| `UPSTREAM_LIMIT` | 503 | 카카오 호출 한도 초과 |
-| `UPSTREAM_ERROR` | 502 | 카카오 응답 오류 |
+| `UPSTREAM_AUTH` | 502 | 카카오·기상청 키 문제 |
+| `UPSTREAM_LIMIT` | 503 | 카카오·기상청 호출 한도 초과 |
+| `UPSTREAM_ERROR` | 502 | 카카오·기상청 응답 오류 |
+| `UPSTREAM_UNREACHABLE` | 502 | 카카오·기상청에 연결 자체가 안 됨 |
 
 ## 영역 분할 검색 (PLAN.md 4.2)
 
@@ -125,6 +143,12 @@ npm run dev
    npx wrangler secret put RATE_LIMIT_SALT
    ```
 
+   기상청 키는 공공데이터포털 → 기상청_단기예보 조회서비스 → **일반 인증키(Decoding)** 입니다.
+
+   ```bash
+   npx wrangler secret put KMA_SERVICE_KEY
+   ```
+
 5. 배포. 주소는 `https://dinner-api.<계정>.workers.dev` 입니다.
 
    ```bash
@@ -145,6 +169,9 @@ npm run dev
 | `/region` 등이 `INTERNAL`(500) | 원격 D1에 테이블 없음 | `npm run db:migrate:remote` |
 | `SERVER_NOT_CONFIGURED` | `KAKAO_REST_KEY` secret 없음 | `npx wrangler secret put KAKAO_REST_KEY` |
 | `UPSTREAM_AUTH` | 카카오맵 사용 설정 꺼짐 또는 REST API 키가 아님 | 위 4번 확인. `npx wrangler tail`에 카카오 오류 내용이 찍힘 |
+| `/weather`가 `UPSTREAM_AUTH` | 기상청 키 미승인·오타 | 활용신청 직후 1~2시간은 키가 동작하지 않을 수 있음. `wrangler tail`에 `kmaError` 확인 |
+| `/weather`가 `UPSTREAM_UNREACHABLE` | Workers에서 공공데이터포털에 연결 안 됨 | PLAN.md 12장 대응(다른 경로로 분리) 검토 |
+| 배포 후 `/weather`가 `INTERNAL` | 새 표(`weather_cells`)가 없음 | `npm run db:migrate:remote` |
 
 ## 설정값 (`wrangler.toml`의 `[vars]`)
 
@@ -156,7 +183,7 @@ npm run dev
 | `KAKAO_CALL_BUDGET` | `40` | 요청 한 번의 카카오 호출 상한 (최대 45) |
 | `RATE_LIMIT_PER_MINUTE` | `30` | IP 하나의 1분당 요청 수 |
 
-D1에 남는 것: 칸 이름(geohash)과 그 칸의 식당 목록, 해시한 IP의 1분 호출 횟수. 매일 새벽 4시(한국)에 지난 기록을 지웁니다.
+D1에 남는 것: 칸 이름(geohash)과 그 칸의 식당 목록, 기상청 격자 번호와 그 격자의 날씨, 해시한 IP의 1분 호출 횟수. 매일 새벽 4시(한국)에 지난 기록을 지웁니다.
 
 ## 폴더
 
@@ -164,7 +191,8 @@ D1에 남는 것: 칸 이름(geohash)과 그 칸의 식당 목록, 해시한 IP�
 |---|---|
 | `src/index.ts` | Workers 진입점 (default export만 둠) |
 | `src/app.ts` | 라우팅, App Check, 호출 제한, 오류 처리 |
-| `src/routes/` | `/places`, `/region`, `/search` |
+| `src/routes/` | `/places`, `/region`, `/search`, `/weather` |
+| `src/lib/kma.ts`, `kmaGrid.ts` | 기상청 API, 위경도 → 기상청 격자 |
 | `src/lib/placeSearch.ts` | 영역 분할 검색 |
 | `src/lib/kakao.ts` | 카카오 로컬 API |
 | `src/lib/cellStore.ts` | D1 칸 캐시 |

@@ -107,10 +107,13 @@ class SettingsScreen extends ConsumerWidget {
           if (kDebugMode) ...[
             const Divider(),
             const SectionLabel('개발용 (출시 빌드에는 보이지 않음)'),
-            _ChoiceTile<SampleWeather>(
+            _ChoiceTile<SampleWeather?>(
               title: '예시 날씨',
               value: ref.watch(sampleWeatherProvider),
-              options: {for (final w in SampleWeather.values) w: w.label},
+              options: {
+                if (!ref.watch(usesSampleDataProvider)) null: '실제 날씨',
+                for (final w in SampleWeather.values) w: w.label,
+              },
               onChanged: ref.read(sampleWeatherProvider.notifier).select,
             ),
             _LinkTile(

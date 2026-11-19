@@ -152,9 +152,15 @@ export class KakaoClient {
   }
 
   private async get<T>(url: string): Promise<T> {
-    const response = await this.fetchFn(url, {
-      headers: { Authorization: `KakaoAK ${this.restKey}` },
-    });
+    let response: Response;
+    try {
+      response = await this.fetchFn(url, {
+        headers: { Authorization: `KakaoAK ${this.restKey}` },
+      });
+    } catch (error) {
+      console.warn(JSON.stringify({ kakaoUnreachable: String(error) }));
+      throw new ApiError(502, 'UPSTREAM_UNREACHABLE', '카카오에 연결하지 못했습니다');
+    }
     if (!response.ok) {
       // 카카오가 거절한 이유(예: 카카오맵 사용 설정 꺼짐)를 `wrangler tail`로 볼 수 있게 남긴다.
       // 카카오 오류 본문에는 요청 좌표가 들어 있지 않다.

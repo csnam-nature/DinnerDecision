@@ -281,29 +281,67 @@ Future<AppLocation> _requireLocation(Ref ref) {
   return Completer<AppLocation>().future;
 }
 
-/// 설정의 '예시 날씨'. 실제 날씨를 붙이면 없앤다.
-class SampleWeatherController extends Notifier<SampleWeather> {
+/// 설정 › 개발용의 '예시 날씨'. null이면 실제 날씨(서버 `/weather`).
+/// 예시 데이터 모드는 서버가 없으니 비 오는 날로 시작한다.
+/// 서버 모드에서도 디버그 빌드에서는 예시 날씨로 바꿔 추천을 시험해 볼 수 있다.
+class SampleWeatherController extends Notifier<SampleWeather?> {
   @override
-  SampleWeather build() => SampleWeather.rain;
+  SampleWeather? build() =>
+      ref.watch(usesSampleDataProvider) ? SampleWeather.rain : null;
 
-  void select(SampleWeather value) => state = value;
+  void select(SampleWeather? value) => state = value;
 }
 
 final sampleWeatherProvider =
-    NotifierProvider<SampleWeatherController, SampleWeather>(
+    NotifierProvider<SampleWeatherController, SampleWeather?>(
       SampleWeatherController.new,
     );
 
-final weatherRepositoryProvider = Provider<WeatherRepository>(
-  (ref) => FakeWeatherRepository(ref.watch(sampleWeatherProvider).weather),
-);
+/// 서버 날씨 저장소. 캐시를 들고 있으므로 예시 날씨를 바꿔도 다시 만들지 않는다.
+final _apiWeatherRepositoryProvider = Provider<ApiWeatherRepository?>((ref) {
+  final client = ref.watch(apiClientProvider);
+  return client == null
+      ? null
+      : ApiWeatherRepository(client, clock: ref.watch(clockProvider));
+});
 
-final weatherProvider = FutureProvider<Weather>((ref) async {
+final weatherRepositoryProvider = Provider<WeatherRepository>((ref) {
+  final sample = ref.watch(sampleWeatherProvider);
+  final api = ref.watch(_apiWeatherRepositoryProvider);
+  if (sample != null || api == null) {
+    return FakeWeatherRepository((sample ?? SampleWeather.rain).weather);
+  }
+  return api;
+});
+
+/// 지금 날씨. 날씨를 못 받으면 null이고, 추천은 날씨 없이 다양성·거리로만 한다 (PLAN.md 12장).
+///
+/// 같은 자리에 오래 있어도 날씨가 바뀌도록 받은 날씨는 [weatherRefreshAfter] 뒤에,
+/// 못 받았으면 [weatherRetryAfter] 뒤에 다시 받는다 (저장소가 15분 캐시를 하므로
+/// 서버를 더 자주 부르지는 않는다).
+final weatherProvider = FutureProvider<Weather?>((ref) async {
+  void refreshAfter(Duration delay) {
+    if (!ref.mounted) return;
+    final timer = Timer(delay, ref.invalidateSelf);
+    ref.onDispose(timer.cancel);
+  }
+
   final location = await _requireLocation(ref);
-  return ref
-      .watch(weatherRepositoryProvider)
-      .fetchCurrent(lat: location.lat, lng: location.lng);
-}, retry: retryNetworkErrors);
+  try {
+    final weather = await ref
+        .watch(weatherRepositoryProvider)
+        .fetchCurrent(lat: location.lat, lng: location.lng);
+    refreshAfter(weatherRefreshAfter);
+    return weather;
+  } on ApiException catch (e) {
+    debugPrint('날씨를 받지 못함: $e');
+    refreshAfter(weatherRetryAfter);
+    return null;
+  }
+});
+
+const weatherRefreshAfter = Duration(minutes: 15);
+const weatherRetryAfter = Duration(minutes: 2);
 
 // ── 주변 식당 ─────────────────────────────────────────
 

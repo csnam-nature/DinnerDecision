@@ -72,5 +72,6 @@ export async function purgeExpired(db: D1Database, nowMs: number): Promise<void>
   await db.batch([
     db.prepare('DELETE FROM place_cells WHERE expires_at <= ?').bind(nowMs),
     db.prepare('DELETE FROM rate_limits WHERE window < ?').bind(currentWindow - 1),
+    db.prepare('DELETE FROM weather_cells WHERE expires_at <= ?').bind(nowMs),
   ]);
 }
