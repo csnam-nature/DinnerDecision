@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
@@ -74,6 +76,10 @@ class _DaySheet extends ConsumerWidget {
               for (final log in logs)
                 _LogEntry(
                   log: log,
+                  photo: switch (log.photoPath) {
+                    final name? => ref.watch(photoStoreProvider)?.file(name),
+                    null => null,
+                  },
                   onOpenRestaurant: log.restaurantId == null
                       ? null
                       : () => closeThen(
@@ -116,9 +122,11 @@ class _LogEntry extends StatelessWidget {
     required this.onEdit,
     required this.onDelete,
     this.onOpenRestaurant,
+    this.photo,
   });
 
   final MealLog log;
+  final File? photo;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
   final VoidCallback? onOpenRestaurant;
@@ -173,6 +181,20 @@ class _LogEntry extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(top: Gap.xs),
               child: Text('"${log.memo}"', style: context.text.bodySmall),
+            ),
+          if (photo case final file?)
+            Padding(
+              padding: const EdgeInsets.only(top: Gap.sm),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(Radii.card),
+                child: Image.file(
+                  file,
+                  height: 140,
+                  fit: BoxFit.cover,
+                  semanticLabel: '${log.restaurantName} 사진',
+                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                ),
+              ),
             ),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,

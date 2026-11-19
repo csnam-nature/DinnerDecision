@@ -15,6 +15,7 @@ class MealLogDraft {
     this.menu = '',
     this.rating = 0,
     this.memo = '',
+    this.photoPath,
     this.weatherText = '',
     this.fromRecommend = false,
   });
@@ -52,6 +53,7 @@ class MealLogDraft {
       menu: log.menu,
       rating: log.rating,
       memo: log.memo,
+      photoPath: log.photoPath,
       weatherText: log.weatherText,
       fromRecommend: log.fromRecommend,
     );
@@ -70,6 +72,9 @@ class MealLogDraft {
   final String menu;
   final int rating;
   final String memo;
+
+  /// 사진 파일 이름 (PhotoStore 안).
+  final String? photoPath;
 
   /// 비어 있으면 화면이 지금 날씨로 채운다.
   final String weatherText;
