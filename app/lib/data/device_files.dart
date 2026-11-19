@@ -1,6 +1,7 @@
 import 'dart:io';
 
-import 'package:file_selector/file_selector.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/services.dart' show PlatformException;
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -45,27 +46,41 @@ class PlatformDeviceFiles implements DeviceFiles {
     );
   }
 
-  /// 백업 파일 종류. 메신저·드라이브에서 받은 zip은 형식이 다르게 저장되기도 해서
-  /// 몇 가지를 같이 허용한다. 내용은 [Backup.decode]가 확인한다.
-  static const _zip = XTypeGroup(
-    label: '백업 파일 (zip)',
-    extensions: ['zip'],
-    mimeTypes: [
-      'application/zip',
-      'application/x-zip-compressed',
-      'application/x-zip',
-      'application/octet-stream',
-    ],
-    uniformTypeIdentifiers: ['public.zip-archive', 'com.pkware.zip-archive'],
-  );
-
   @override
   Future<List<int>?> pickBackup() async {
-    // 경로 대신 내용을 바로 받는다. 파일 제공 앱에 따라 경로를 못 주는 경우가 있다.
-    final file = await openFile(acceptedTypeGroups: const [_zip]);
-    return file?.readAsBytes();
+    final List<PlatformFile> files;
+    try {
+      files = await FilePicker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['zip'],
+      );
+    } on PlatformException catch (e) {
+      // 삼성 휴대폰에서 파일 선택 창의 '다운로드' 메뉴로 고르면 시스템 미디어 저장소가
+      // 접근을 거부해(SecurityException) 파일을 읽지 못한다. 저장소 경로로 고르면 된다.
+      if (e.code == 'unknown_path')
+        throw const BackupPickException.unreadable();
+      rethrow;
+    }
+    if (files.isEmpty) return null;
+    final path = files.first.path;
+    if (path == null) throw const BackupPickException.unreadable();
+    return File(path).readAsBytes();
   }
 
   @override
   Future<Directory> tempDir() => getTemporaryDirectory();
+}
+
+/// 고른 파일을 시스템이 넘겨주지 않았을 때. 사용자가 다르게 고르면 해결된다.
+class BackupPickException implements Exception {
+  const BackupPickException.unreadable()
+    : message =
+          '이 경로로는 파일을 열 수 없어요.\n'
+          "파일 선택 창 왼쪽 메뉴의 '다운로드' 대신 "
+          "'내 휴대폰(내장 메모리) › Download' 폴더로 들어가서 골라 주세요.";
+
+  final String message;
+
+  @override
+  String toString() => 'BackupPickException: $message';
 }

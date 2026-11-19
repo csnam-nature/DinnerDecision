@@ -6,6 +6,7 @@ import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/widgets/common_widgets.dart';
 import '../../app/widgets/cuisine_widgets.dart';
+import '../../data/device_files.dart';
 import '../../data/local/backup.dart';
 import '../../data/local/backup_service.dart';
 import '../../data/providers.dart';
@@ -127,6 +128,20 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     );
   }
 
+  Future<void> _explain(String title, String message) => showDialog<void>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(title),
+      content: Text(message),
+      actions: [
+        FilledButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('확인'),
+        ),
+      ],
+    ),
+  );
+
   Future<void> _run(Future<void> Function() task) async {
     setState(() => _busy = true);
     try {
@@ -151,6 +166,9 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
       contents = await service.pick();
     } on BackupException catch (e) {
       if (mounted) _say(e.message);
+      return;
+    } on BackupPickException catch (e) {
+      if (mounted) await _explain('파일을 열 수 없어요', e.message);
       return;
     } on Object catch (e, stack) {
       await _fail('백업 파일을 읽지 못했어요', e, stack);
