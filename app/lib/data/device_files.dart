@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -15,8 +15,8 @@ abstract interface class DeviceFiles {
   /// 공유 시트로 파일을 보낸다 (드라이브 저장, 카톡 나에게 보내기 등).
   Future<void> share(String path, {required String subject});
 
-  /// 백업 파일(zip)을 고른다. 취소하면 null.
-  Future<String?> pickBackup();
+  /// 백업 파일(zip)을 골라 내용을 읽는다. 취소하면 null.
+  Future<List<int>?> pickBackup();
 
   Future<Directory> tempDir();
 }
@@ -45,13 +45,25 @@ class PlatformDeviceFiles implements DeviceFiles {
     );
   }
 
+  /// 백업 파일 종류. 메신저·드라이브에서 받은 zip은 형식이 다르게 저장되기도 해서
+  /// 몇 가지를 같이 허용한다. 내용은 [Backup.decode]가 확인한다.
+  static const _zip = XTypeGroup(
+    label: '백업 파일 (zip)',
+    extensions: ['zip'],
+    mimeTypes: [
+      'application/zip',
+      'application/x-zip-compressed',
+      'application/x-zip',
+      'application/octet-stream',
+    ],
+    uniformTypeIdentifiers: ['public.zip-archive', 'com.pkware.zip-archive'],
+  );
+
   @override
-  Future<String?> pickBackup() async {
-    final files = await FilePicker.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['zip'],
-    );
-    return files.isEmpty ? null : files.first.path;
+  Future<List<int>?> pickBackup() async {
+    // 경로 대신 내용을 바로 받는다. 파일 제공 앱에 따라 경로를 못 주는 경우가 있다.
+    final file = await openFile(acceptedTypeGroups: const [_zip]);
+    return file?.readAsBytes();
   }
 
   @override

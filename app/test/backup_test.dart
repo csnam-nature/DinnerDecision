@@ -59,7 +59,10 @@ class FakeDeviceFiles implements DeviceFiles {
       shared = path;
 
   @override
-  Future<String?> pickBackup() async => toPick;
+  Future<List<int>?> pickBackup() async => switch (toPick) {
+    final path? => File(path).readAsBytesSync(),
+    null => null,
+  };
 
   @override
   Future<Directory> tempDir() async => temp;

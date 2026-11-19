@@ -59,13 +59,9 @@ class BackupService {
 
   /// 백업 파일을 골라 읽는다. 취소하면 null, 잘못된 파일이면 [BackupException].
   Future<BackupContents?> pick() async {
-    final path = await _ref.read(deviceFilesProvider).pickBackup();
-    if (path == null) return null;
-    return read(path);
-  }
-
-  Future<BackupContents> read(String path) async {
-    final decoded = Backup.decode(await File(path).readAsBytes());
+    final bytes = await _ref.read(deviceFilesProvider).pickBackup();
+    if (bytes == null) return null;
+    final decoded = Backup.decode(bytes);
     return BackupContents(decoded.data, decoded.photos);
   }
 
