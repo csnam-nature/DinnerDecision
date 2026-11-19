@@ -160,6 +160,19 @@ describe('/weather', () => {
     expect(body.error.code).toBe('UPSTREAM_UNREACHABLE');
   });
 
+  it('기상청이 답하지 않으면 기다리지 않고 UPSTREAM_UNREACHABLE', async () => {
+    const hang: FetchLike = (_input, init) =>
+      new Promise((_resolve, reject) => {
+        init?.signal?.addEventListener('abort', () => reject(init.signal!.reason));
+      });
+    const { KmaClient } = await import('../src/lib/kma');
+    const client = new KmaClient('key', hang, undefined, 50);
+    await expect(client.current({ nx: 60, ny: 127 }, now)).rejects.toMatchObject({
+      code: 'UPSTREAM_UNREACHABLE',
+      message: expect.stringContaining('답하지 않았습니다'),
+    });
+  });
+
   it('Encoding 키를 넣어도 두 번 인코딩하지 않는다', async () => {
     const kma = fakeKma();
     await weather(env({ KMA_SERVICE_KEY: 'abc%2Bdef' }), kma.fetchFn);
