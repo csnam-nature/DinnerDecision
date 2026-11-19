@@ -29,7 +29,7 @@ class PickOnePhoto implements DeviceFiles {
   Future<void> share(String path, {required String subject}) async {}
 
   @override
-  Future<String?> pickBackup() async => null;
+  Future<List<int>?> pickBackup() async => null;
 
   @override
   Future<Directory> tempDir() async => Directory.systemTemp;
