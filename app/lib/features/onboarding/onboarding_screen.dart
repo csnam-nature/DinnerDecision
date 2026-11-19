@@ -88,9 +88,12 @@ class OnboardingScreen extends ConsumerWidget {
                 width: double.infinity,
                 child: FilledButton(
                   onPressed: () {
+                    // 위치 상태를 '안내 중'일 때 먼저 만들어 두어야, 안내를 마친 뒤
+                    // 처음 만들어지면서 GPS 찾기를 한 번 더 시작하지 않는다.
+                    final location = ref.read(locationStateProvider.notifier);
                     ref.read(onboardingDoneProvider.notifier).complete();
                     // 위치 권한 창은 GPS를 찾을 때 시스템이 띄운다.
-                    ref.read(locationStateProvider.notifier).locateMe();
+                    location.locateMe();
                     context.go(Routes.nearby);
                   },
                   child: const Text('위치 권한 허용하기'),
@@ -99,6 +102,9 @@ class OnboardingScreen extends ConsumerWidget {
               Center(
                 child: TextButton(
                   onPressed: () {
+                    // '나중에'는 GPS를 쓰지 않는다는 뜻이다. 위치 상태를 먼저 만들어
+                    // 위치 설정 화면이 열릴 때 GPS 찾기(권한 창)가 시작되지 않게 한다.
+                    ref.read(locationStateProvider.notifier);
                     ref.read(onboardingDoneProvider.notifier).complete();
                     context.go(Routes.location);
                   },

@@ -13,7 +13,6 @@ import '../../core/dates.dart';
 import '../../core/geo.dart';
 import '../../data/external_launcher.dart';
 import '../../data/providers.dart';
-import '../../domain/models/restaurant.dart';
 import '../meal_log_edit/meal_log_draft.dart';
 import '../nearby/nearby_screen.dart' show hideRestaurant;
 
@@ -51,7 +50,7 @@ class RestaurantDetailScreen extends ConsumerWidget {
 class _Detail extends ConsumerWidget {
   const _Detail({required this.place});
 
-  final NearbyPlace place;
+  final PlaceDetail place;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -84,7 +83,7 @@ class _Detail extends ConsumerWidget {
               centerLat: r.lat,
               centerLng: r.lng,
               // 내 위치가 작은 지도 안에 들어오도록 거리에 맞춰 넓힌다.
-              spanM: (place.distanceM * 1.3).clamp(150, 1500).toDouble(),
+              spanM: ((place.distanceM ?? 0) * 1.3).clamp(150, 1500).toDouble(),
               meLat: location?.lat,
               meLng: location?.lng,
               selectedId: r.id,
@@ -115,11 +114,12 @@ class _Detail extends ConsumerWidget {
                 const SizedBox(height: Gap.sm),
                 Text(r.name, style: context.text.headlineSmall),
                 const SizedBox(height: Gap.md),
-                _InfoLine(
-                  icon: Icons.directions_walk,
-                  text:
-                      '${formatDistance(place.distanceM)} · 걸어서 ${walkMinutes(place.distanceM)}분',
-                ),
+                if (place.distanceM case final meters?)
+                  _InfoLine(
+                    icon: Icons.directions_walk,
+                    text:
+                        '${formatDistance(meters)} · 걸어서 ${walkMinutes(meters)}분',
+                  ),
                 _InfoLine(
                   icon: Icons.home_outlined,
                   text: r.roadAddress,
