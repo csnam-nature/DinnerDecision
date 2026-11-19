@@ -9,6 +9,7 @@ import '../../app/widgets/common_widgets.dart';
 import '../../app/widgets/cuisine_widgets.dart';
 import '../../app/widgets/load_error.dart';
 import '../../app/widgets/restaurant_tile.dart';
+import '../../app/widgets/weather_text.dart';
 import '../../core/geo.dart';
 import '../../data/providers.dart';
 import '../../domain/models/cuisine.dart';
@@ -25,7 +26,7 @@ class NearbyScreen extends ConsumerWidget {
     final locationState = ref.watch(locationStateProvider);
     final location = locationState.location;
     final view = ref.watch(nearbyViewProvider);
-    final weather = ref.watch(weatherProvider).value;
+    final weather = ref.watch(weatherProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -68,10 +69,7 @@ class NearbyScreen extends ConsumerWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(Gap.lg, 0, Gap.lg, Gap.sm),
-            child: Text(
-              weather?.summaryWithDust ?? '날씨를 확인하는 중…',
-              style: context.text.bodySmall,
-            ),
+            child: Text(weatherLine(weather), style: context.text.bodySmall),
           ),
           const _CuisineFilterBar(),
           if (!view.mapMode) const _ListTools(),

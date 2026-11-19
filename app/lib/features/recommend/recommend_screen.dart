@@ -7,6 +7,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../app/router.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
+import '../../app/widgets/weather_text.dart';
 import '../../app/widgets/common_widgets.dart';
 import '../../app/widgets/cuisine_widgets.dart';
 import '../../core/dates.dart';
@@ -66,7 +67,7 @@ class _StartView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final weather = ref.watch(weatherProvider).value;
+    final weather = ref.watch(weatherProvider);
     final location = ref.watch(locationProvider);
     final today = ref.watch(clockProvider)();
     final avoidDays = ref.watch(
@@ -96,7 +97,7 @@ class _StartView extends ConsumerWidget {
             children: [
               Text('지금', style: context.text.labelSmall),
               Text(
-                '${weather?.summaryWithDust ?? '날씨를 확인하는 중…'} · 📍 ${location?.name ?? '위치 확인 중'}',
+                '${weatherLine(weather)} · 📍 ${location?.name ?? '위치 확인 중'}',
                 style: context.text.bodyMedium,
               ),
               const SizedBox(height: Gap.sm),

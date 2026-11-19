@@ -4,6 +4,8 @@ import 'dart:typed_data';
 import 'package:dinner_decision/data/api/api_client.dart';
 import 'package:dinner_decision/data/repositories/location_repository.dart';
 import 'package:dinner_decision/data/repositories/place_repository.dart';
+import 'package:dinner_decision/data/repositories/weather_repository.dart';
+import 'package:dinner_decision/domain/models/weather.dart';
 import 'package:dinner_decision/domain/models/app_location.dart';
 import 'package:dinner_decision/domain/models/cuisine.dart';
 import 'package:dio/dio.dart';
@@ -200,6 +202,60 @@ void main() {
       expect(results.single.name, '강남역 2호선');
       expect(results.single.source, LocationSource.search);
       expect(server.requests.single.queryParameters, {'query': '강남역'});
+    });
+  });
+
+  group('ApiWeatherRepository', () {
+    Map<String, Object?> body({
+      String precipitation = 'rain',
+      Object? sky = 'cloudy',
+    }) => {
+      'tempC': 8.7,
+      'precipitation': precipitation,
+      'sky': sky,
+      'rain1hMm': 1.5,
+      'humidity': 90,
+      'observedAt': '2026-11-19T18:00+09:00',
+      'dust': null,
+      'attribution': '날씨: 기상청',
+    };
+
+    test('서버 날씨를 앱 날씨로 바꾼다', () {
+      final w = weatherFromJson(body());
+      expect(w.tempC, 8.7);
+      expect(w.precipitation, Precipitation.rain);
+      expect(w.sky, Sky.cloudy);
+      expect(w.dust, isNull);
+      expect(w.summary, '☔ 비 · 9℃');
+      expect(weatherFromJson(body(precipitation: 'snow')).skyLabel, '눈');
+      expect(
+        weatherFromJson(body(precipitation: 'none', sky: 'partly')).summary,
+        '⛅ 구름많음 · 9℃',
+      );
+      // 하늘 상태를 못 받았으면 맑음으로 본다.
+      expect(
+        weatherFromJson(body(precipitation: 'none', sky: null)).sky,
+        Sky.clear,
+      );
+      expect(
+        () => weatherFromJson({'precipitation': 'none'}),
+        throwsA(isA<ApiException>()),
+      );
+    });
+
+    test('같은 동네는 15분 동안 다시 부르지 않는다', () async {
+      var now = DateTime(2026, 11, 19, 18, 50);
+      final server = FakeServer((_) => body());
+      final repo = ApiWeatherRepository(clientFor(server), clock: () => now);
+      await repo.fetchCurrent(lat: 37.5446, lng: 127.0559);
+      await repo.fetchCurrent(lat: 37.5449, lng: 127.0561); // 같은 동네
+      expect(server.requests, hasLength(1));
+      expect(server.requests.single.path, '/weather');
+      await repo.fetchCurrent(lat: 37.4979, lng: 127.0276); // 강남역
+      expect(server.requests, hasLength(2));
+      now = now.add(const Duration(minutes: 16));
+      await repo.fetchCurrent(lat: 37.4979, lng: 127.0276);
+      expect(server.requests, hasLength(3));
     });
   });
 }

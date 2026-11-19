@@ -34,11 +34,16 @@ const sampleLocations = [
 enum SampleWeather {
   rain(
     '비 · 9℃',
-    Weather(tempC: 9, precipitation: Precipitation.rain, sky: Sky.cloudy),
+    Weather(
+      tempC: 9,
+      precipitation: Precipitation.rain,
+      sky: Sky.cloudy,
+      dust: DustLevel.normal,
+    ),
   ),
   clear('맑음 · 19℃', Weather(tempC: 19, dust: DustLevel.good)),
-  hot('폭염 · 31℃', Weather(tempC: 31)),
-  cold('한파 · -3℃', Weather(tempC: -3)),
+  hot('폭염 · 31℃', Weather(tempC: 31, dust: DustLevel.normal)),
+  cold('한파 · -3℃', Weather(tempC: -3, dust: DustLevel.normal)),
   dust(
     '미세먼지 나쁨 · 14℃',
     Weather(tempC: 14, sky: Sky.cloudy, dust: DustLevel.bad),

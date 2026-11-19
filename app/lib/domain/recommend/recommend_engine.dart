@@ -34,7 +34,9 @@ class RecommendEngine {
   RecommendResult recommend({
     required List<NearbyPlace> places,
     required List<MealLog> logs,
-    required Weather weather,
+
+    /// 날씨를 못 받았으면 null. 날씨 점수 없이 다양성·거리로만 고른다.
+    required Weather? weather,
     required AppSettings settings,
     required DateTime today,
     Set<String> excludedIds = const {},
@@ -136,7 +138,7 @@ class RecommendEngine {
   Recommendation _score(
     NearbyPlace place, {
     required WeatherKind kind,
-    required Weather weather,
+    required Weather? weather,
     required AppSettings settings,
     required List<Cuisine> recentCuisines,
     required Set<String> recentTags,
@@ -211,11 +213,12 @@ class RecommendEngine {
     add(repeatsMenu ? 0 : 10);
 
     // 4. 날씨 적합도 (0~25)
-    final temp = weather.tempRounded;
+    // 날씨 종류가 neutral이 아니면 날씨가 있다 (WeatherRules.kindOf).
+    final temp = weather?.tempRounded ?? 0;
     switch (kind) {
       case WeatherKind.wet || WeatherKind.cold || WeatherKind.hot:
         if (r.tags.any(rules.boostTags(kind).contains)) {
-          add(25, (p) => _weatherReason(kind, weather, r, p));
+          add(25, (p) => _weatherReason(kind, weather!, r, p));
         } else {
           add(8);
         }
@@ -285,7 +288,7 @@ class RecommendEngine {
         points: 0,
         emoji: '📍',
         text: wet
-            ? '걸어서 $minutes분 거리예요 (${weather.skyLabel} 오는 날이라 가까운 곳에 점수를 더 줬어요)'
+            ? '걸어서 $minutes분 거리예요 (${weather!.skyLabel} 오는 날이라 가까운 곳에 점수를 더 줬어요)'
             : '걸어서 $minutes분 거리예요',
         short: '걸어서 $minutes분',
       ),

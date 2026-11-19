@@ -3,6 +3,8 @@ import 'package:dinner_decision/data/api/api_client.dart';
 import 'package:dinner_decision/data/providers.dart';
 import 'package:dinner_decision/data/repositories/location_repository.dart';
 import 'package:dinner_decision/data/repositories/place_repository.dart';
+import 'package:dinner_decision/data/repositories/weather_repository.dart';
+import 'package:dinner_decision/domain/models/weather.dart';
 import 'package:dinner_decision/data/sample/sample_data.dart';
 import 'package:dinner_decision/domain/models/app_location.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -203,4 +205,39 @@ void main() {
       expect(find.text('두 글자 이상 입력해 주세요'), findsOneWidget);
     });
   });
+
+  group('날씨 (5단계)', () {
+    test('서버 모드는 실제 날씨를 쓰고, 못 받으면 null', () async {
+      final container = ProviderContainer(
+        overrides: [
+          ...serverMode(location: const FakeLocationRepository()),
+          weatherRepositoryProvider.overrideWithValue(_FailingWeather()),
+        ],
+      );
+      addTearDown(container.dispose);
+      container.listen(weatherProvider, (_, _) {});
+      expect(container.read(sampleWeatherProvider), isNull); // 실제 날씨
+      expect(await container.read(weatherProvider.future), isNull);
+    });
+
+    test('서버 모드에서도 개발용 예시 날씨로 바꿀 수 있다', () async {
+      final container = ProviderContainer(
+        overrides: serverMode(location: const FakeLocationRepository()),
+      );
+      addTearDown(container.dispose);
+      container.listen(weatherProvider, (_, _) {});
+      container.read(sampleWeatherProvider.notifier).select(SampleWeather.hot);
+      final weather = await container.read(weatherProvider.future);
+      expect(weather?.tempRounded, 31);
+    });
+  });
+}
+
+class _FailingWeather implements WeatherRepository {
+  @override
+  Future<Weather> fetchCurrent({
+    required double lat,
+    required double lng,
+  }) async =>
+      throw const ApiException('UPSTREAM_UNREACHABLE', '기상청에 연결하지 못했습니다');
 }

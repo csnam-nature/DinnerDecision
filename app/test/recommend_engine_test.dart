@@ -29,7 +29,7 @@ void main() {
 
   /// 무작위 뽑기까지 포함해 여러 번 돌려서, 나올 수 있는 추천을 모두 모은다.
   List<Recommendation> picksOverSeeds(
-    Weather weather, {
+    Weather? weather, {
     AppSettings settings = const AppSettings(),
     List<MealLog>? withLogs,
     Set<String> excluded = const {},
@@ -237,5 +237,48 @@ void main() {
     );
     expect(result.picks, isEmpty);
     expect(result.candidateCount, 0);
+  });
+
+  group('실제 날씨 (5단계)', () {
+    const weatherCodes = {
+      ReasonCode.weatherWet,
+      ReasonCode.weatherCold,
+      ReasonCode.weatherHot,
+      ReasonCode.weatherNice,
+      ReasonCode.weatherDusty,
+    };
+
+    test('날씨를 못 받아도 추천하고, 날씨 이유는 붙이지 않는다', () {
+      final picks = picksOverSeeds(null);
+      expect(picks, isNotEmpty);
+      for (final pick in picks) {
+        expect(
+          pick.reasons.map((r) => r.code).toSet().intersection(weatherCodes),
+          isEmpty,
+        );
+      }
+    });
+
+    test('구름이 좀 있는 걷기 좋은 날도 걷기 좋은 날로 본다', () {
+      expect(
+        rules.kindOf(const Weather(tempC: 20, sky: Sky.partly)),
+        rules.kindOf(const Weather(tempC: 20)),
+      );
+      expect(
+        rules.kindOf(const Weather(tempC: 20, sky: Sky.cloudy)),
+        isNot(rules.kindOf(const Weather(tempC: 20))),
+      );
+    });
+
+    test('미세먼지를 모르면 미세먼지 이유를 붙이지 않는다', () {
+      const weather = Weather(tempC: 14, sky: Sky.cloudy);
+      expect(weather.summaryWithDust, '☁️ 흐림 · 14℃');
+      for (final pick in picksOverSeeds(weather)) {
+        expect(
+          pick.reasons.map((r) => r.code),
+          isNot(contains(ReasonCode.weatherDusty)),
+        );
+      }
+    });
   });
 }
