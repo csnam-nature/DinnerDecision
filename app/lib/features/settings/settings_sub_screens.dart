@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -100,6 +101,32 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
       ..showSnackBar(SnackBar(content: Text(message)));
   }
 
+  /// 예상하지 못한 오류는 내용을 그대로 보여주고 로그에 남긴다. 원인을 알려면 내용이 필요하다.
+  Future<void> _fail(String what, Object error, StackTrace stack) async {
+    debugPrint('$what: $error\n$stack');
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(what),
+        content: SingleChildScrollView(
+          child: SelectableText('$error', style: context.text.bodySmall),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () =>
+                Clipboard.setData(ClipboardData(text: '$what\n$error\n$stack')),
+            child: const Text('오류 내용 복사'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('닫기'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _run(Future<void> Function() task) async {
     setState(() => _busy = true);
     try {
@@ -112,8 +139,8 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
   Future<void> _export() => _run(() async {
     try {
       await ref.read(backupServiceProvider).export();
-    } on Exception {
-      if (mounted) _say('백업 파일을 만들지 못했어요');
+    } on Object catch (e, stack) {
+      await _fail('백업 파일을 만들지 못했어요', e, stack);
     }
   });
 
@@ -125,8 +152,8 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     } on BackupException catch (e) {
       if (mounted) _say(e.message);
       return;
-    } on Exception {
-      if (mounted) _say('파일을 읽지 못했어요');
+    } on Object catch (e, stack) {
+      await _fail('백업 파일을 읽지 못했어요', e, stack);
       return;
     }
     if (contents == null || !mounted) return;
@@ -156,8 +183,8 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     try {
       await service.restore(contents);
       if (mounted) _say('기록 ${contents.logCount}건을 복원했어요');
-    } on Exception {
-      if (mounted) _say('복원하지 못했어요. 지금 기록은 그대로예요');
+    } on Object catch (e, stack) {
+      await _fail('복원하지 못했어요', e, stack);
     }
   });
 
