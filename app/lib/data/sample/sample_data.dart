@@ -6,7 +6,7 @@ import '../../domain/models/restaurant.dart';
 import '../../domain/models/weather.dart';
 
 /// 서버와 DB를 붙이기 전까지 화면을 채우는 예시 데이터.
-/// 2단계(서버)와 4단계(DB)에서 실제 데이터로 바뀌면 이 파일은 테스트용으로만 남긴다.
+/// 서버 주소 없이 실행(예시 데이터 모드)하거나 테스트할 때만 쓴다.
 
 const sampleLocations = [
   AppLocation(

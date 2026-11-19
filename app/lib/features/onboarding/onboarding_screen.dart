@@ -1,13 +1,14 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../app/router.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
-import '../../app/widgets/common_widgets.dart';
+import '../../data/providers.dart';
 
 /// S-01 온보딩. 시스템 권한 창을 띄우기 전에 위치가 왜 필요한지 먼저 알려준다.
-class OnboardingScreen extends StatelessWidget {
+class OnboardingScreen extends ConsumerWidget {
   const OnboardingScreen({super.key});
 
   static const _points = [
@@ -17,7 +18,7 @@ class OnboardingScreen extends StatelessWidget {
   ];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -87,15 +88,20 @@ class OnboardingScreen extends StatelessWidget {
                 width: double.infinity,
                 child: FilledButton(
                   onPressed: () {
+                    ref.read(onboardingDoneProvider.notifier).complete();
+                    // 위치 권한 창은 GPS를 찾을 때 시스템이 띄운다.
+                    ref.read(locationStateProvider.notifier).locateMe();
                     context.go(Routes.nearby);
-                    showNotReady(context, '위치 권한 요청은 아직 연결 전이라 예시 위치로 시작해요');
                   },
                   child: const Text('위치 권한 허용하기'),
                 ),
               ),
               Center(
                 child: TextButton(
-                  onPressed: () => context.go(Routes.location),
+                  onPressed: () {
+                    ref.read(onboardingDoneProvider.notifier).complete();
+                    context.go(Routes.location);
+                  },
                   child: const Text('나중에 (위치 직접 설정)'),
                 ),
               ),

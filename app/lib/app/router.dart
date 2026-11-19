@@ -12,6 +12,7 @@ import '../features/recommend/recommend_screen.dart';
 import '../features/restaurant_detail/restaurant_detail_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/settings/settings_sub_screens.dart';
+import '../data/providers.dart';
 import 'home_shell.dart';
 
 /// 화면 주소 (UI_PLAN.md 3장).
@@ -38,7 +39,10 @@ final routerProvider = Provider<GoRouter>((ref) {
   // 탭 위를 덮는 화면은 rootKey에 올려서 하단 탭이 보이지 않게 한다.
   return GoRouter(
     navigatorKey: rootKey,
-    initialLocation: Routes.nearby,
+    // 처음 켜면 안내 화면부터. 다시 만들어지지 않도록 처음 값만 읽는다.
+    initialLocation: ref.read(onboardingDoneProvider)
+        ? Routes.nearby
+        : Routes.onboarding,
     routes: [
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => HomeShell(shell: shell),

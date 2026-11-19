@@ -9,6 +9,7 @@ import '../../app/widgets/app_map_view.dart';
 import '../../app/widgets/common_widgets.dart';
 import '../../app/widgets/cuisine_widgets.dart';
 import '../../core/geo.dart';
+import '../../data/external_launcher.dart';
 import '../../data/providers.dart';
 import '../../domain/models/restaurant.dart';
 import 'nearby_controller.dart';
@@ -100,7 +101,7 @@ class NearbyMap extends ConsumerWidget {
   }
 }
 
-class _PreviewCard extends StatelessWidget {
+class _PreviewCard extends ConsumerWidget {
   const _PreviewCard({
     required this.place,
     required this.onPrevious,
@@ -112,7 +113,7 @@ class _PreviewCard extends StatelessWidget {
   final VoidCallback onNext;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final r = place.restaurant;
     return Card(
       elevation: 4,
@@ -164,8 +165,17 @@ class _PreviewCard extends StatelessWidget {
                     style: FilledButton.styleFrom(
                       minimumSize: const Size(64, 48),
                     ),
-                    onPressed: () =>
-                        showNotReady(context, '네이버 지도 길찾기는 아직 연결 전이에요'),
+                    onPressed: () async {
+                      final messenger = ScaffoldMessenger.of(context);
+                      final result = await ref
+                          .read(restaurantLinksProvider)
+                          .openWalkRoute(r);
+                      if (result == OpenResult.failed) {
+                        messenger.showSnackBar(
+                          const SnackBar(content: Text('열 수 있는 앱이 없어요')),
+                        );
+                      }
+                    },
                     child: const Text('네이버 길찾기'),
                   ),
                 ),
