@@ -77,9 +77,8 @@ class AppDatabase extends _$AppDatabase implements LocalStore {
   int get schemaVersion => 1;
 
   @override
-  MigrationStrategy get migration => MigrationStrategy(
-    onCreate: (m) => m.createAll(),
-  );
+  MigrationStrategy get migration =>
+      MigrationStrategy(onCreate: (m) => m.createAll());
 
   static const _settingsKey = 'settings';
   static const _onboardingKey = 'onboarding_done';
@@ -177,8 +176,8 @@ class AppDatabase extends _$AppDatabase implements LocalStore {
       (delete(mealLogRows)..where((t) => t.id.equals(id))).go();
 
   @override
-  Future<void> saveSettings(AppSettings settings) => into(keyValueRows)
-      .insertOnConflictUpdate(
+  Future<void> saveSettings(AppSettings settings) =>
+      into(keyValueRows).insertOnConflictUpdate(
         KeyValueRowsCompanion.insert(
           key: _settingsKey,
           value: jsonEncode(Codec.settings(settings)),

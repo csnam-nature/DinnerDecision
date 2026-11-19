@@ -31,6 +31,10 @@
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>식사 기록에 음식 사진을 남기기 위해 카메라를 사용합니다. 사진은 이 휴대폰에만 저장합니다.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>식사 기록에 앨범의 음식 사진을 첨부하기 위해 사용합니다. 사진은 이 휴대폰에만 저장합니다.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>주변 1km 안의 음식점을 찾기 위해 현재 위치를 사용합니다. 위치는 서버에 저장하지 않습니다.</string>
 	<key>UIApplicationSceneManifest</key>

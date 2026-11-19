@@ -58,7 +58,9 @@ class _LocationScreenState extends ConsumerState<LocationScreen> {
           onPressed: () => switch (failure) {
             LocationFailure.serviceOff || LocationFailure.deniedForever =>
               ref.read(locationRepositoryProvider).openSettings(failure),
-            LocationFailure.denied || LocationFailure.timeout => _useCurrent(),
+            LocationFailure.denied ||
+            LocationFailure.timeout ||
+            LocationFailure.notSet => _useCurrent(),
           },
         ),
       ),

@@ -9,6 +9,7 @@ import '../../app/widgets/common_widgets.dart';
 import '../../app/widgets/cuisine_widgets.dart';
 import '../../core/dates.dart';
 import '../../core/geo.dart';
+import '../../data/device_files.dart';
 import '../../data/providers.dart';
 import '../../domain/models/cuisine.dart';
 import '../../domain/models/meal_log.dart';
@@ -38,6 +39,8 @@ class _MealLogEditScreenState extends ConsumerState<MealLogEditScreen> {
   late String? _restaurantId = _draft.restaurantId;
   late Cuisine? _cuisine = _draft.cuisine;
   late int _rating = _draft.rating;
+  late String? _photo = _draft.photoPath;
+  var _addingPhoto = false;
   late final _name = TextEditingController(text: _draft.restaurantName);
   late final _menu = TextEditingController(text: _draft.menu);
   late final _memo = TextEditingController(text: _draft.memo);
@@ -107,9 +110,11 @@ class _MealLogEditScreenState extends ConsumerState<MealLogEditScreen> {
         menu: _menu.text.trim(),
         rating: _rating,
         memo: _memo.text.trim(),
+        photoPath: _photo,
         weatherText: _weatherText,
         fromRecommend: _draft.fromRecommend,
       ),
+      restaurant: _restaurant,
     );
     // 저장한 날을 달력에서 바로 볼 수 있게 한다.
     ref.read(calendarViewProvider.notifier).showDay(_date);
@@ -122,9 +127,49 @@ class _MealLogEditScreenState extends ConsumerState<MealLogEditScreen> {
       );
   }
 
+  Future<void> _addPhoto() async {
+    final store = ref.read(photoStoreProvider);
+    if (store == null) return;
+    final source = await showModalBottomSheet<PhotoSource>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_camera_outlined),
+              title: const Text('사진 찍기'),
+              onTap: () => Navigator.pop(context, PhotoSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text('앨범에서 고르기'),
+              onTap: () => Navigator.pop(context, PhotoSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (source == null || !mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _addingPhoto = true);
+    try {
+      final picked = await ref.read(deviceFilesProvider).pickPhoto(source);
+      if (picked == null) return;
+      final name = await store.add(picked);
+      if (mounted) setState(() => _photo = name);
+    } on Exception {
+      messenger.showSnackBar(SnackBar(content: Text('사진을 가져오지 못했어요')));
+    } finally {
+      if (mounted) setState(() => _addingPhoto = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final restaurant = _restaurant;
+    final photoStore = ref.watch(photoStoreProvider);
+    final photo = _photo;
     final menuWords = restaurant == null
         ? const <String>[]
         : {
@@ -278,17 +323,45 @@ class _MealLogEditScreenState extends ConsumerState<MealLogEditScreen> {
               decoration: const InputDecoration(hintText: '맛, 양, 다시 갈지…'),
             ),
           ),
-          _Field(
-            label: '사진',
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: OutlinedButton.icon(
-                onPressed: () => showNotReady(context, '사진 추가는 아직 연결 전이에요'),
-                icon: const Icon(Icons.add_a_photo_outlined, size: 20),
-                label: const Text('사진 추가'),
+          if (photoStore != null)
+            _Field(
+              label: '사진',
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: photo != null
+                    ? Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(Radii.card),
+                            child: Image.file(
+                              photoStore.file(photo),
+                              height: 160,
+                              fit: BoxFit.cover,
+                              semanticLabel: '기록 사진',
+                              errorBuilder: (_, _, _) => const SizedBox(
+                                height: 60,
+                                child: Center(child: Text('사진을 찾을 수 없어요')),
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            top: 4,
+                            right: 4,
+                            child: IconButton.filledTonal(
+                              tooltip: '사진 빼기',
+                              onPressed: () => setState(() => _photo = null),
+                              icon: const Icon(Icons.close, size: 18),
+                            ),
+                          ),
+                        ],
+                      )
+                    : OutlinedButton.icon(
+                        onPressed: _addingPhoto ? null : _addPhoto,
+                        icon: const Icon(Icons.add_a_photo_outlined, size: 20),
+                        label: Text(_addingPhoto ? '가져오는 중…' : '사진 추가'),
+                      ),
               ),
             ),
-          ),
           _Field(
             label: '날씨',
             divider: false,

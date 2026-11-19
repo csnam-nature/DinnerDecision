@@ -3,10 +3,11 @@
 현재 위치 주변 식당을 날씨와 방문 기록으로 추천하는 앱입니다.
 계획은 [`docs/PLAN.md`](../docs/PLAN.md), 화면 설계는 [`docs/UI_PLAN.md`](../docs/UI_PLAN.md)에 있습니다.
 
-지금은 **3단계(지도·상세)까지 완료**했습니다.
+지금은 **4단계(기록·달력)** 입니다.
 서버 주소를 넣고 실행하면 GPS 위치와 실제 주변 식당(카카오)으로, 넣지 않으면 예시 데이터로 동작합니다.
 네이버 지도 Client ID를 넣으면 네이버 지도로, 넣지 않으면 마커만 그린 그림 지도로 보입니다.
-날씨·기록은 아직 예시 데이터입니다.
+서버 모드에서는 식사 기록·사진·설정·숨긴 식당을 휴대폰 안 DB에 저장하고, 백업 파일로 내보내고 복원할 수 있습니다.
+날씨는 아직 예시 데이터입니다.
 
 ## 실행
 
@@ -69,12 +70,24 @@ flutter test
 | 앱 인증 | 서버 `APP_CHECK_MODE=off` | Firebase App Check 토큰을 `ApiClient(appCheckToken:)`에 연결 | 2~3 (Firebase 준비 후) |
 | 지도 | ✅ `NAVER_MAP_CLIENT_ID`가 있으면 네이버 지도(`NaverMapView`), 없으면 그림 지도 | 실기기 확인 | 3 |
 | ~~네이버 지도·전화·카카오 장소 열기~~ | ✅ `url_launcher` (`RestaurantLinks`). 네이버 지도 앱이 없으면 네이버 지도 웹 | — | 3 |
-| 식사 기록·설정 저장 | 메모리 (앱을 끄면 사라짐) | `MealLogController`, `SettingsController`를 drift DB로 교체 | 4 |
-| 사진, 백업·복원 | 안내 문구만 표시 | `image_picker`, 파일 내보내기 | 4 |
+| ~~식사 기록·설정 저장~~ | ✅ 서버 모드: 기기 DB(drift, `lib/data/local/`). 예시 모드: 메모리 | — | 4 |
+| ~~사진, 백업·복원~~ | ✅ 사진은 앱 폴더 `photos/`, 백업은 zip(JSON + 사진)을 공유 시트로 | — | 4 |
 | 날씨 | 설정의 '예시 날씨'에서 선택 (디버그 빌드에서만 보임) | `WeatherRepository` 구현을 서버 `/weather` 호출로 교체 | 5 |
-| 온보딩 | 설정 › 개발용에서만 열림 | 첫 실행 여부 저장 후 자동 표시 | 4 |
+| ~~온보딩~~ | ✅ 서버 모드에서 처음 켤 때 자동 표시 | — | 4 |
 
 추천 계산(`lib/domain/recommend/recommend_engine.dart`)은 가짜가 아니라 계획서 9장의 점수표 그대로입니다.
+
+## 기기 DB (drift)
+
+표 정의는 `lib/data/local/app_database.dart`, 자동 생성 코드는 `app_database.g.dart`입니다.
+표를 바꾸면 `schemaVersion`을 올리고 옮기는 방법(migration)을 적은 뒤 다시 생성합니다.
+
+```bash
+dart run build_runner build
+```
+
+앱을 켤 때 DB 내용을 한 번 읽어 메모리에 올리고(`storedDataProvider`), 바뀔 때마다 바로 DB에 씁니다.
+기록은 1년에 수백 건이라 전부 올려도 가볍습니다.
 
 ## 서버 모드와 예시 모드
 
@@ -83,6 +96,8 @@ flutter test
 | 위치 | 예시 위치 4곳 | 켜자마자 GPS로 찾음. 실패하면 안내 후 검색으로 직접 설정 |
 | 주변 식당 | 예시 29곳 | 서버 `/places` (반경 안 실제 음식점) |
 | 오류 | — | 위치 권한·인터넷·호출 제한을 구분해서 안내. 인터넷 오류만 2번 자동 재시도 |
+| 기록·설정 | 예시 기록, 앱을 끄면 처음으로 | 기기 DB에 저장 |
+| 첫 실행 안내 | 설정 › 개발용에서만 | 처음 켤 때 자동 |
 
 ## 참고
 

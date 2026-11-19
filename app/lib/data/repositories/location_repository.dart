@@ -11,7 +11,10 @@ enum LocationFailure {
   serviceOff('위치 서비스(GPS)가 꺼져 있어요', '위치 켜기'),
   denied('위치 권한을 허용하지 않았어요', '다시 요청'),
   deniedForever('설정에서 위치 권한을 허용해 주세요', '설정 열기'),
-  timeout('위치를 찾는 데 시간이 너무 걸려요', '다시 시도');
+  timeout('위치를 찾는 데 시간이 너무 걸려요', '다시 시도'),
+
+  /// GPS를 아직 쓰지 않았고 직접 고르지도 않음 (첫 실행 안내에서 '나중에').
+  notSet('아직 위치를 정하지 않았어요', '위치 설정');
 
   const LocationFailure(this.message, this.actionLabel);
 

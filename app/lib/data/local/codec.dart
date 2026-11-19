@@ -68,7 +68,9 @@ abstract final class Codec {
     categoryRaw: j['categoryRaw'] as String? ?? '',
     cuisine: _enum(Cuisine.values, j['cuisine'], Cuisine.etc),
     subCategory: j['subCategory'] as String? ?? '',
-    tags: [for (final t in j['tags'] as List<Object?>? ?? const []) t as String],
+    tags: [
+      for (final t in j['tags'] as List<Object?>? ?? const []) t as String,
+    ],
     roadAddress: j['roadAddress'] as String? ?? '',
     phone: j['phone'] as String? ?? '',
     lat: (j['lat'] as num? ?? 0).toDouble(),
