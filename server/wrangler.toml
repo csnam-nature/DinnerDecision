@@ -18,7 +18,7 @@ RATE_LIMIT_PER_MINUTE = "30"
 [[d1_databases]]
 binding = "DB"
 database_name = "dinner-cache"
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "d121dadb-02b7-4e08-8337-a4ea921ad724"
 migrations_dir = "migrations"
 
 # 하루 한 번 지난 캐시 지우기 (UTC 19:00 = 한국 04:00)
