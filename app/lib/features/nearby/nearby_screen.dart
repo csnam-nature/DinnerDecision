@@ -59,7 +59,9 @@ class NearbyScreen extends ConsumerWidget {
           ),
           IconButton(
             tooltip: '새로고침',
-            onPressed: () => ref.invalidate(nearbyPlacesProvider),
+            onPressed: () => ref
+              ..invalidate(nearbyPlacesProvider)
+              ..invalidate(weatherProvider),
             icon: const Icon(Icons.refresh),
           ),
         ],
@@ -208,7 +210,10 @@ class _NearbyList extends ConsumerWidget {
           );
         }
         return RefreshIndicator(
-          onRefresh: () => ref.refresh(nearbyPlacesProvider.future),
+          onRefresh: () {
+            ref.invalidate(weatherProvider);
+            return ref.refresh(nearbyPlacesProvider.future);
+          },
           child: ListView.separated(
             // 떠 있는 추천 버튼에 마지막 줄이 가리지 않게 아래를 비운다.
             padding: const EdgeInsets.only(bottom: 96),
