@@ -57,8 +57,9 @@ class PlatformDeviceFiles implements DeviceFiles {
     } on PlatformException catch (e) {
       // 삼성 휴대폰에서 파일 선택 창의 '다운로드' 메뉴로 고르면 시스템 미디어 저장소가
       // 접근을 거부해(SecurityException) 파일을 읽지 못한다. 저장소 경로로 고르면 된다.
-      if (e.code == 'unknown_path')
+      if (e.code == 'unknown_path') {
         throw const BackupPickException.unreadable();
+      }
       rethrow;
     }
     if (files.isEmpty) return null;
