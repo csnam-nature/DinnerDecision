@@ -315,17 +315,33 @@ final weatherRepositoryProvider = Provider<WeatherRepository>((ref) {
 });
 
 /// 지금 날씨. 날씨를 못 받으면 null이고, 추천은 날씨 없이 다양성·거리로만 한다 (PLAN.md 12장).
+///
+/// 같은 자리에 오래 있어도 날씨가 바뀌도록 받은 날씨는 [weatherRefreshAfter] 뒤에,
+/// 못 받았으면 [weatherRetryAfter] 뒤에 다시 받는다 (저장소가 15분 캐시를 하므로
+/// 서버를 더 자주 부르지는 않는다).
 final weatherProvider = FutureProvider<Weather?>((ref) async {
+  void refreshAfter(Duration delay) {
+    if (!ref.mounted) return;
+    final timer = Timer(delay, ref.invalidateSelf);
+    ref.onDispose(timer.cancel);
+  }
+
   final location = await _requireLocation(ref);
   try {
-    return await ref
+    final weather = await ref
         .watch(weatherRepositoryProvider)
         .fetchCurrent(lat: location.lat, lng: location.lng);
+    refreshAfter(weatherRefreshAfter);
+    return weather;
   } on ApiException catch (e) {
     debugPrint('날씨를 받지 못함: $e');
+    refreshAfter(weatherRetryAfter);
     return null;
   }
 });
+
+const weatherRefreshAfter = Duration(minutes: 15);
+const weatherRetryAfter = Duration(minutes: 2);
 
 // ── 주변 식당 ─────────────────────────────────────────
 
