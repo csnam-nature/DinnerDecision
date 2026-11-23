@@ -2,7 +2,7 @@
 
 > 버전 1.0 · 작성일 2026-11-23 · 상태: 6단계(안정화·배포) 진행 중 — Crashlytics·App Check 코드 반영
 > UI 상세 설계는 [`UI_PLAN.md`](./UI_PLAN.md) 참고
-> 진행 기록·명령어 모음(복습·재현용)은 [`PROGRESS.md`](./PROGRESS.md)
+> 진행 기록·명령어 모음(복습·재현용)은 [`PROGRESS.md`](./PROGRESS.md), 출시 절차는 [`RELEASE.md`](./RELEASE.md)
 
 ## 변경 이력
 | 버전 | 내용 |
@@ -453,8 +453,8 @@ settings
 | 6-1 | Firebase 프로젝트(Spark, 애널리틱스 끔), `flutterfire configure`, 디버그 키 SHA-256 등록 | 사용자 | ✅ 프로젝트 `dinnerdecision-ca59c`, Android·iOS 앱 등록, 설정 파일 커밋 (iOS plist는 6-7에서) |
 | 6-2 | Crashlytics: 처리하지 못한 오류·시작 실패·백업 오류 보고, 디버그 빌드는 시험 오류만 | 코드 | ✅ 실기기에서 시험 오류 확인 |
 | 6-3 | App Check: 디버그 토큰 / Play Integrity / App Attest, 토큰을 서버 요청 헤더에, 서버 `APP_CHECK_MODE=monitor` | 코드 | ✅ 실기기에서 `appCheck: ok` 확인 |
-| 6-3a | 개인정보: 요청 주소에 정확한 좌표가 Cloudflare 로그로 남던 문제 → 앱이 좌표를 약 100m 단위로 줄여 보냄(반경 +100m로 받고 기기에서 정확히 거름), 서버 요청 기록(invocation logs) 끔 | 코드 | ✅ 코드·테스트, ⏳ 배포 |
-| 6-4 | 출시 준비: 서명 키, 아이콘, 개인정보처리방침(`/privacy`), 스크린샷 | 함께 | ⏳ |
+| 6-3a | 개인정보: 요청 주소에 정확한 좌표가 Cloudflare 로그로 남던 문제 → 앱이 좌표를 약 100m 단위로 줄여 보냄(반경 +100m로 받고 기기에서 정확히 거름), 서버 요청 기록(invocation logs) 끔 | 코드 | ✅ 실기기 확인 |
+| 6-4 | 출시 준비: 아이콘, 서명 설정, 개인정보처리방침(`/privacy`), 스토어 문안·그래픽, 데이터 보안 양식 답안 ([`RELEASE.md`](./RELEASE.md)) | 함께 | ✅ 준비 완료 · ⏳ 서명 키 만들기, 방침 운영자·연락처, 스크린샷 |
 | 6-5 | Play 내부 테스트, Play 앱 서명 SHA-256 등록 → 서버 `enforce` | 사용자 → 코드 | ⏳ (Play 개발자 계정 필요) |
 | 6-6 | 백업 복원 문제, 약관 확인, CPU 실측 | 함께 | ⏳ |
 | 6-7 | iOS 빌드(맥북에서 `flutterfire configure` 다시 실행해 plist 생성) → TestFlight | 사용자 | ⏳ |
@@ -480,6 +480,7 @@ settings
 | 패키지가 Flutter 3.50의 `material_ui`를 아직 지원하지 않을 수 있음 (`table_calendar`에서 실제로 겪음) | 패키지를 넣기 전에 `material_ui` 지원 여부 확인. `flutter_naver_map`은 3단계 시작 전에 먼저 붙여 봄. 안 되면 직접 만들거나 다른 패키지 사용 |
 | `flutter_naver_map` 1.4.4가 예전 material 사용 | 지도 본체는 문제없음. 로고를 눌렀을 때 뜨는 정보 창만 맞지 않아 로고 누르기를 끔 (3단계에서 확인) |
 | 패키지 업데이트로 Android에서만 생기는 오류 (실제 사례: `path_provider_android` 2.3.x + `jni` 1.2.0 → 앱 폴더를 못 찾아 시작 실패) | `pubspec.yaml`의 `dependency_overrides`로 검증된 버전 고정. 시작 실패 시 오류 화면과 단계별 로그(`[시작]`)로 원인 확인 |
+| **위치정보법**: 이용자 위치로 서비스를 제공하면 위치기반서비스사업 신고 대상일 수 있음 | 공개 출시 전에 방송통신위원회·KISA 위치정보지원센터 안내로 신고 대상 여부 확인 (RELEASE.md 7장) |
 | 날씨 API 장애 | 날씨 없이 다양성·거리로만 추천, "날씨 정보 없음" 표시 |
 | Workers 무료 한도 (CPU 10ms, 요청당 외부 호출 50번) | 0단계에서 실측, 칸 분할 상한 40번, 부족하면 월 5달러 유료 요금제 |
 | Workers(해외 거점 포함)에서 국내 공공 API 호출이 막히거나 느릴 가능성 | 0단계에서 확인. 문제가 되면 해당 API만 다른 경로(사내 Synology 컨테이너 등)로 분리 |

@@ -8,6 +8,13 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// android/key.properties (git 제외). 예시는 key.properties.example
+val keystoreProperties =
+    java.util.Properties().apply {
+        val file = rootProject.file("key.properties")
+        if (file.exists()) file.inputStream().use { load(it) }
+    }
+
 android {
     namespace = "kr.naturetec.dinnerdecision"
     compileSdk = flutter.compileSdkVersion
@@ -33,11 +40,27 @@ android {
         versionName = flutter.versionName
     }
 
+    // 출시용 서명 (6-4). 키와 비밀번호는 android/key.properties에 두고 git에 올리지 않는다.
+    // 파일이 없으면 디버그 키로 서명한다 (`flutter run --release`로 시험할 때).
+    signingConfigs {
+        if (keystoreProperties.isNotEmpty()) {
+            create("release") {
+                storeFile = file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig =
+                if (keystoreProperties.isNotEmpty()) {
+                    signingConfigs.getByName("release")
+                } else {
+                    signingConfigs.getByName("debug")
+                }
         }
     }
 }

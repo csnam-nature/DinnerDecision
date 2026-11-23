@@ -7,6 +7,7 @@ import '../../app/router.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/widgets/common_widgets.dart';
+import '../../data/api/api_client.dart';
 import '../../data/providers.dart';
 import '../../data/sample/sample_data.dart';
 import '../../domain/models/app_settings.dart';
@@ -143,7 +144,22 @@ class SettingsScreen extends ConsumerWidget {
           const SectionLabel('정보'),
           _LinkTile(
             title: '개인정보처리방침',
-            onTap: () => showNotReady(context, '개인정보처리방침은 출시 준비 단계에서 넣어요'),
+            onTap: () async {
+              // 서버의 공개 페이지 (스토어에 적는 주소와 같음)
+              if (apiBaseUrl.isEmpty) {
+                showNotReady(context, '서버 주소 없이 실행 중이라 열 수 없어요');
+                return;
+              }
+              final messenger = ScaffoldMessenger.of(context);
+              final opened = await ref
+                  .read(externalLauncherProvider)
+                  .open(Uri.parse('$apiBaseUrl/privacy'));
+              if (!opened) {
+                messenger.showSnackBar(
+                  const SnackBar(content: Text('열 수 있는 앱이 없어요')),
+                );
+              }
+            },
           ),
           _LinkTile(
             title: '오픈소스 라이선스',

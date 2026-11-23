@@ -31,6 +31,16 @@ describe('API', () => {
     expect(body.ok).toBe(true);
   });
 
+  it('/privacy 는 앱 인증 없이 열리는 개인정보처리방침 페이지', async () => {
+    const env = makeEnv({ APP_CHECK_MODE: 'enforce', FIREBASE_PROJECT_NUMBER: '1' });
+    const response = await handleRequest(new Request('https://x/privacy'), env, { nowMs: () => now });
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toContain('text/html');
+    const html = await response.text();
+    expect(html).toContain('개인정보처리방침');
+    expect(html).toContain('저장하거나 기록하지 않습니다');
+  });
+
   it('/places 는 식당 목록과 출처를 준다', async () => {
     const { status, body } = await call('/places?lat=37.5446&lng=127.0559&radius=1000', makeEnv(), kakao().fetchFn);
     expect(status).toBe(200);
