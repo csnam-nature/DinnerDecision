@@ -1,3 +1,6 @@
+// 빌드 스크립트 안에서 `java`는 Gradle의 java 설정을 가리키므로 java.util.Properties는 import로 가져온다.
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // START: FlutterFire Configuration
@@ -10,7 +13,7 @@ plugins {
 
 // android/key.properties (git 제외). 예시는 key.properties.example
 val keystoreProperties =
-    java.util.Properties().apply {
+    Properties().apply {
         val file = rootProject.file("key.properties")
         // UTF-8로 읽는다. 기본(ISO-8859-1)으로 읽으면 경로의 한글(예: D:/02_개인/...)이 깨진다.
         if (file.exists()) file.reader(Charsets.UTF_8).use { load(it) }
