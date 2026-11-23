@@ -95,10 +95,11 @@ void main() {
 
       final request = server.requests.single;
       expect(request.path, '/places');
+      // 위경도는 약 100m 단위로 줄여 보내고, 그만큼 반경을 넓혀 받는다.
       expect(request.queryParameters, {
-        'lat': '37.54460',
-        'lng': '127.05590',
-        'radius': 1000,
+        'lat': '37.545',
+        'lng': '127.056',
+        'radius': 1100,
       });
     });
 

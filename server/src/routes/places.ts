@@ -5,8 +5,11 @@ import { KakaoClient, type FetchLike } from '../lib/kakao';
 import { searchNearby } from '../lib/placeSearch';
 
 export const MIN_RADIUS_M = 100;
-/** 설정 화면에서 고를 수 있는 가장 넓은 반경 (500m, 1km, 2km). */
-export const MAX_RADIUS_M = 2000;
+/**
+ * 설정 화면에서 고를 수 있는 가장 넓은 반경(2km) + 여유 100m.
+ * 앱은 위경도를 약 100m 단위로 줄여 보내므로, 반경 끝 식당이 빠지지 않게 조금 넓게 요청한다.
+ */
+export const MAX_RADIUS_M = 2100;
 export const DEFAULT_CALL_BUDGET = 40;
 
 /**

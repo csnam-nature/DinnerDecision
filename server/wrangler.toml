@@ -30,3 +30,9 @@ crons = ["0 19 * * *"]
 
 [observability]
 enabled = true
+
+# 요청마다 남는 기록(요청 주소 = 위경도 포함)은 저장하지 않는다. 우리 코드의 console 로그만 남긴다.
+# 앱은 위경도를 약 100m 단위로 줄여 보내지만, 그 값도 쌓아 둘 필요가 없다 (PLAN.md 3.2 개인정보).
+# `npx wrangler tail`(실시간 보기)에는 요청 주소가 계속 보인다. 저장되지는 않는다.
+[observability.logs]
+invocation_logs = false

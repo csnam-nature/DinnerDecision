@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:geolocator/geolocator.dart';
 
+import '../../core/geo.dart';
 import '../../domain/models/app_location.dart';
 import '../api/api_client.dart';
 import '../sample/sample_data.dart';
@@ -89,7 +90,7 @@ class DeviceLocationRepository implements LocationRepository {
     try {
       final region = await _client.get(
         '/region',
-        query: {'lat': lat.toStringAsFixed(5), 'lng': lng.toStringAsFixed(5)},
+        query: {'lat': coarseCoord(lat), 'lng': coarseCoord(lng)},
       );
       return AppLocation(
         name: region['name'] as String? ?? '현재 위치',
