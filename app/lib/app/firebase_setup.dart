@@ -42,10 +42,14 @@ class NoopErrorReporter implements ErrorReporter {
 
 /// Firebase Crashlytics (PLAN.md 5장, 6단계).
 /// 보내는 것: 오류 내용과 위치(코드), 기기 모델·OS 버전. 위치·기록·사진은 보내지 않는다.
+///
+/// 디버그 빌드에서는 개발 중 오류가 쌓이지 않게 [record]가 아무것도 하지 않고,
+/// [sendTestReport](설정 › 개발용)로 보낸 시험 오류만 기록한다.
 class CrashlyticsReporter implements ErrorReporter {
-  CrashlyticsReporter(this._crashlytics);
+  CrashlyticsReporter(this._crashlytics, {this.recordInDebug = false});
 
   final FirebaseCrashlytics _crashlytics;
+  final bool recordInDebug;
 
   @override
   void record(
@@ -54,6 +58,7 @@ class CrashlyticsReporter implements ErrorReporter {
     String? reason,
     bool fatal = false,
   }) {
+    if (kDebugMode && !recordInDebug) return;
     unawaited(
       _crashlytics
           .recordError(error, stack, reason: reason, fatal: fatal)
@@ -61,16 +66,13 @@ class CrashlyticsReporter implements ErrorReporter {
     );
   }
 
+  /// 시험 오류를 기록한다. Crashlytics는 기록한 오류를 **앱을 다시 켤 때** 보낸다.
   @override
-  Future<void> sendTestReport() async {
-    await _crashlytics.recordError(
-      StateError('Crashlytics 연결 시험 (설정 › 개발용)'),
-      StackTrace.current,
-      reason: 'test',
-    );
-    // 디버그 빌드는 자동 전송이 꺼져 있어서 직접 보낸다.
-    await _crashlytics.sendUnsentReports();
-  }
+  Future<void> sendTestReport() => _crashlytics.recordError(
+    StateError('Crashlytics 연결 시험 (설정 › 개발용)'),
+    StackTrace.current,
+    reason: 'test',
+  );
 }
 
 /// Firebase를 켠 결과. 설정 파일이 없거나 실패하면 [FirebaseServices.disabled].
@@ -111,18 +113,18 @@ Future<FirebaseServices> initFirebase({required bool serverMode}) async {
   final crashlytics = FirebaseCrashlytics.instance;
   final reporter = CrashlyticsReporter(crashlytics);
   try {
-    // 개발 중 오류까지 쌓이지 않게 출시 빌드에서만 자동으로 보낸다.
-    await crashlytics.setCrashlyticsCollectionEnabled(!kDebugMode);
+    // 전송은 항상 켠다. 꺼 두면 기록한 오류를 휴대폰에 쌓아만 두고 보내지 않는다.
+    // 대신 디버그 빌드에서는 개발 중 오류를 Crashlytics로 넘기지 않는다 (시험 버튼만).
+    await crashlytics.setCrashlyticsCollectionEnabled(true);
     await crashlytics.setCustomKey('mode', serverMode ? 'server' : 'sample');
-    final previous = FlutterError.onError;
-    FlutterError.onError = (details) {
-      previous?.call(details); // 디버그 화면의 빨간 오류 표시는 그대로
-      unawaited(crashlytics.recordFlutterFatalError(details));
-    };
-    PlatformDispatcher.instance.onError = (error, stack) {
-      reporter.record(error, stack, reason: 'uncaught', fatal: true);
-      return true;
-    };
+    await crashlytics.setCustomKey('build', kDebugMode ? 'debug' : 'release');
+    if (!kDebugMode) {
+      FlutterError.onError = crashlytics.recordFlutterFatalError;
+      PlatformDispatcher.instance.onError = (error, stack) {
+        reporter.record(error, stack, reason: 'uncaught', fatal: true);
+        return true;
+      };
+    }
   } on Object catch (e) {
     debugPrint('Crashlytics 설정 실패: $e');
   }

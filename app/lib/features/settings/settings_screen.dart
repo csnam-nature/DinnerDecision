@@ -128,9 +128,7 @@ class SettingsScreen extends ConsumerWidget {
                   await ref.read(errorReporterProvider).sendTestReport();
                   messenger.showSnackBar(
                     const SnackBar(
-                      content: Text(
-                        '보냈어요. 몇 분 뒤 Firebase 콘솔 › Crashlytics에서 확인하세요',
-                      ),
+                      content: Text('기록했어요. 앱을 완전히 껐다 켜면 보내져요 (콘솔에 몇 분 걸림)'),
                     ),
                   );
                 },

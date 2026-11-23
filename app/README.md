@@ -89,7 +89,7 @@ Google 서비스(4.4.4)·Crashlytics(3.0.7) Gradle 플러그인이 있습니다.
 
 | 기능 | 디버그 빌드 | 출시 빌드 |
 |---|---|---|
-| Crashlytics | 자동으로 보내지 않음. 설정 › 개발용 › **Crashlytics 시험 오류 보내기**로 연결 확인 | 처리하지 못한 오류·앱이 꺼지는 오류를 보냄 |
+| Crashlytics | 개발 중 오류는 보내지 않음. 설정 › 개발용 › **Crashlytics 시험 오류 보내기** 후 **앱을 다시 켜면** 시험 오류만 보내짐 | 처리하지 못한 오류·앱이 꺼지는 오류를 보냄 |
 | App Check | 디버그 토큰 (`APP_CHECK_DEBUG_TOKEN`) | Android Play Integrity, iOS App Attest |
 
 - 보내는 것: 오류 내용·코드 위치, 기기 모델·OS 버전, 모드(server/sample). 위치·기록·사진은 보내지 않습니다.
