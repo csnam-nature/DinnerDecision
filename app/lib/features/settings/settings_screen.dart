@@ -138,7 +138,7 @@ class SettingsScreen extends ConsumerWidget {
             else
               const ListTile(
                 title: Text('Firebase 꺼짐'),
-                subtitle: Text('google-services.json이 없어서 오류 수집·앱 인증 없이 실행 중'),
+                subtitle: Text('Firebase를 시작하지 못해 오류 수집·앱 인증 없이 실행 중'),
               ),
           ],
           const Divider(),

@@ -80,9 +80,12 @@ flutter test
 
 ## Firebase (오류 수집·앱 인증, 6단계)
 
-`android/app/google-services.json`(iOS는 `ios/Runner/GoogleService-Info.plist`)이 있으면 Firebase를 켜고,
-없으면 Firebase 없이 지금처럼 동작합니다. 두 파일은 `flutterfire configure`가 만듭니다.
-Android는 `google-services.json`이 있을 때만 Google 서비스·Crashlytics Gradle 플러그인을 씁니다.
+Firebase 프로젝트는 `dinnerdecision-ca59c`입니다. 앱은 `lib/firebase_options.dart`로 Firebase를 시작하고,
+실패하면 Firebase 없이 지금처럼 동작합니다. `firebase_options.dart`, `android/app/google-services.json`,
+`firebase.json`은 `flutterfire configure`가 만든 파일입니다 (키는 비밀값이 아님).
+iOS `GoogleService-Info.plist`는 맥북에서 `flutterfire configure`를 다시 실행해 만듭니다 (6-7).
+Android 빌드 설정(`settings.gradle.kts`, `app/build.gradle.kts`)의 `FlutterFire Configuration` 부분에
+Google 서비스(4.4.4)·Crashlytics(3.0.7) Gradle 플러그인이 있습니다. Crashlytics 플러그인을 빼면 앱이 시작할 때 꺼집니다.
 
 | 기능 | 디버그 빌드 | 출시 빌드 |
 |---|---|---|

@@ -6,6 +6,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 
 import '../data/api/api_client.dart';
+import '../firebase_options.dart';
 
 /// App Check 디버그 토큰. Firebase 콘솔 › App Check › 앱 › 디버그 토큰 관리에 등록한 값.
 /// 비워 두면 SDK가 만든 토큰이 실행 로그에 한 번 찍힌다 (재설치하면 바뀐다).
@@ -94,13 +95,15 @@ class FirebaseServices {
 
 /// Firebase 켜기. 앱 시작 때 한 번.
 ///
-/// 설정은 Android `google-services.json`, iOS `GoogleService-Info.plist`에서 읽는다
-/// (flutterfire configure가 만든다). 파일이 없으면 Firebase 없이 지금처럼 동작한다.
+/// 설정은 `lib/firebase_options.dart`(flutterfire configure가 만든다)에서 읽는다.
+/// 실패하면 Firebase 없이 지금처럼 동작한다.
 Future<FirebaseServices> initFirebase({required bool serverMode}) async {
   try {
-    await Firebase.initializeApp().timeout(const Duration(seconds: 10));
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    ).timeout(const Duration(seconds: 10));
   } on Object catch (e) {
-    debugPrint('Firebase 없이 실행합니다 (설정 파일 없음 또는 실패): $e');
+    debugPrint('Firebase 없이 실행합니다: $e');
     return FirebaseServices.disabled;
   }
 

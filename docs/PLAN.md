@@ -450,8 +450,8 @@ settings
 
 | 순서 | 작업 | 누가 | 상태 |
 |---|---|---|---|
-| 6-1 | Firebase 프로젝트(Spark, 애널리틱스 끔), `flutterfire configure`, 디버그 키 SHA-256 등록 | 사용자 | 🔄 프로젝트 생성 완료 (`dinnerdecision-ca59c`), 설정 파일 커밋 대기 |
-| 6-2 | Crashlytics: 처리하지 못한 오류·시작 실패·백업 오류 보고, 출시 빌드에서만 자동 전송, 개발용 시험 버튼 | 코드 | ✅ 코드·테스트 (설정 파일 없으면 Firebase 없이 동작) |
+| 6-1 | Firebase 프로젝트(Spark, 애널리틱스 끔), `flutterfire configure`, 디버그 키 SHA-256 등록 | 사용자 | ✅ 프로젝트 `dinnerdecision-ca59c`, Android·iOS 앱 등록, 설정 파일 커밋 (iOS plist는 6-7에서) |
+| 6-2 | Crashlytics: 처리하지 못한 오류·시작 실패·백업 오류 보고, 출시 빌드에서만 자동 전송, 개발용 시험 버튼 | 코드 | ✅ 코드·테스트, ⏳ 실기기에서 시험 오류 확인 |
 | 6-3 | App Check: 디버그 토큰 / Play Integrity / App Attest, 토큰을 서버 요청 헤더에, 서버 `APP_CHECK_MODE=monitor` | 코드 | ✅ 코드·테스트, ⏳ 배포·디버그 토큰 등록 |
 | 6-4 | 출시 준비: 서명 키, 아이콘, 개인정보처리방침(`/privacy`), 스크린샷 | 함께 | ⏳ |
 | 6-5 | Play 내부 테스트, Play 앱 서명 SHA-256 등록 → 서버 `enforce` | 사용자 → 코드 | ⏳ (Play 개발자 계정 필요) |
