@@ -47,7 +47,7 @@ class WeatherRules {
     if (weather.precipitation != Precipitation.none) return WeatherKind.wet;
     if (weather.tempC <= coldMaxTempC) return WeatherKind.cold;
     if (weather.tempC >= hotMinTempC) return WeatherKind.hot;
-    if (weather.dust == DustLevel.bad) return WeatherKind.dusty;
+    if (weather.dust?.isBad ?? false) return WeatherKind.dusty;
     // 구름이 좀 있어도 걷기 좋은 날로 본다. 흐린 날만 뺀다.
     if (weather.sky != Sky.cloudy &&
         weather.tempC >= niceMinTempC &&

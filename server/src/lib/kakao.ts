@@ -151,6 +151,22 @@ export class KakaoClient {
     return hits.slice(0, limit);
   }
 
+  /**
+   * 위경도 → TM 좌표 (에어코리아 근접 측정소 조회용).
+   * 에어코리아는 TM 좌표로 가까운 측정소를 찾는다.
+   */
+  async toTm(lat: number, lng: number): Promise<{ x: number; y: number } | null> {
+    const params = new URLSearchParams({ x: String(lng), y: String(lat), input_coord: 'WGS84', output_coord: 'TM' });
+    const body = await this.get<{ documents: Array<{ x: number | string; y: number | string }> }>(
+      `${BASE}/geo/transcoord.json?${params}`,
+    );
+    const doc = body.documents[0];
+    if (!doc) return null;
+    const x = Number(doc.x);
+    const y = Number(doc.y);
+    return Number.isFinite(x) && Number.isFinite(y) ? { x, y } : null;
+  }
+
   private async get<T>(url: string): Promise<T> {
     let response: Response;
     try {

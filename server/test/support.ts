@@ -8,7 +8,7 @@ import type { FetchLike } from '../src/lib/kakao';
  */
 export function createTestD1(): D1Database {
   const sqlite = new DatabaseSync(':memory:');
-  for (const name of ['0001_init.sql', '0002_weather.sql']) {
+  for (const name of ['0001_init.sql', '0002_weather.sql', '0003_air.sql']) {
     sqlite.exec(readFileSync(new URL(`../migrations/${name}`, import.meta.url), 'utf8'));
   }
 

@@ -270,6 +270,17 @@ void main() {
       );
     });
 
+    test('미세먼지가 매우나쁨이어도 미세먼지 날씨로 본다', () {
+      expect(
+        rules.kindOf(const Weather(tempC: 14, dust: DustLevel.veryBad)),
+        rules.kindOf(const Weather(tempC: 14, dust: DustLevel.bad)),
+      );
+      expect(
+        rules.kindOf(const Weather(tempC: 14, dust: DustLevel.normal)),
+        isNot(rules.kindOf(const Weather(tempC: 14, dust: DustLevel.bad))),
+      );
+    });
+
     test('미세먼지를 모르면 미세먼지 이유를 붙이지 않는다', () {
       const weather = Weather(tempC: 14, sky: Sky.cloudy);
       expect(weather.summaryWithDust, '☁️ 흐림 · 14℃');

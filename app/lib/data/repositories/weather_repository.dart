@@ -65,6 +65,7 @@ Weather weatherFromJson(Map<String, dynamic> json) {
       'good' => DustLevel.good,
       'normal' => DustLevel.normal,
       'bad' => DustLevel.bad,
+      'veryBad' => DustLevel.veryBad,
       _ => null,
     },
   );

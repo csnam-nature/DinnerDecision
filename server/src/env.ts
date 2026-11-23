@@ -6,6 +6,8 @@ export interface Env {
   KAKAO_REST_KEY: string;
   /** 공공데이터포털 기상청 단기예보 일반 인증키 (Secret). */
   KMA_SERVICE_KEY?: string;
+  /** 에어코리아 키. 비우면 KMA_SERVICE_KEY를 쓴다 (공공데이터포털 계정 키는 하나). */
+  AIRKOREA_SERVICE_KEY?: string;
   /** 기상청 API 주소. 비우면 https://apis.data.go.kr/… (연결 문제를 시험할 때만 바꾼다). */
   KMA_BASE_URL?: string;
   /** IP 해시용 소금값 (Secret, 선택). */

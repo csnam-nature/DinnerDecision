@@ -249,6 +249,17 @@ void main() {
         weatherFromJson(body(precipitation: 'none', sky: 'partly')).summary,
         '⛅ 구름많음 · 9℃',
       );
+      // 미세먼지 (에어코리아)
+      expect(
+        weatherFromJson({...body(), 'dust': 'veryBad'}).dust,
+        DustLevel.veryBad,
+      );
+      expect(
+        weatherFromJson({...body(precipitation: 'none'), 'dust': 'bad'})
+            .summaryWithDust,
+        '☁️ 흐림 · 9℃ · 미세먼지 나쁨',
+      );
+      expect(weatherFromJson({...body(), 'dust': 'unknown'}).dust, isNull);
       // 하늘 상태를 못 받았으면 맑음으로 본다.
       expect(
         weatherFromJson(body(precipitation: 'none', sky: null)).sky,

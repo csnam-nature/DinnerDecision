@@ -45,12 +45,28 @@ function kmaJson(items: object[], resultCode = '00') {
   });
 }
 
-/** 가짜 기상청. noDataFor에 든 발표 시각은 '자료 없음(03)'으로 답한다. */
-function fakeKma(options: { noDataFor?: string[]; keyError?: boolean; fcstFails?: boolean } = {}) {
+interface FakeOptions {
+  noDataFor?: string[];
+  keyError?: boolean;
+  fcstFails?: boolean;
+  /** 에어코리아: 'error'면 오류, 'hang'이면 응답 없음, 'noGrade'면 점검 중(등급 없음) */
+  air?: 'ok' | 'error' | 'hang' | 'noGrade';
+}
+
+/**
+ * 가짜 기상청·카카오 좌표 변환·에어코리아. noDataFor에 든 발표 시각은 '자료 없음(03)'으로 답한다.
+ * calls에는 기상청 호출만, airCalls에는 카카오·에어코리아 호출이 쌓인다.
+ */
+function fakeKma(options: FakeOptions = {}) {
   const calls: string[] = [];
-  const fetchFn: FetchLike = async (input) => {
-    calls.push(input);
+  const airCalls: string[] = [];
+  const fetchFn: FetchLike = async (input, init) => {
     const url = new URL(input);
+    if (url.hostname === 'dapi.kakao.com' || url.pathname.includes('B552584')) {
+      airCalls.push(input);
+      return fakeAir(url, init, options.air ?? 'ok');
+    }
+    calls.push(input);
     if (options.keyError) {
       return new Response(
         '<OpenAPI_ServiceResponse><cmmMsgHeader><returnAuthMsg>SERVICE_KEY_IS_NOT_REGISTERED_ERROR</returnAuthMsg></cmmMsgHeader></OpenAPI_ServiceResponse>',
@@ -78,7 +94,44 @@ function fakeKma(options: { noDataFor?: string[]; keyError?: boolean; fcstFails?
       ]),
     );
   };
-  return { fetchFn, calls };
+  return { fetchFn, calls, airCalls };
+}
+
+function airJson(items: object[], resultCode = '00') {
+  return JSON.stringify({ response: { header: { resultCode, resultMsg: 'NORMAL_CODE' }, body: { items } } });
+}
+
+async function fakeAir(url: URL, init: RequestInit | undefined, mode: NonNullable<FakeOptions['air']>) {
+  if (url.hostname === 'dapi.kakao.com') {
+    expect(url.searchParams.get('output_coord')).toBe('TM');
+    return Response.json({ documents: [{ x: 198056.1234, y: 451984.5678 }] });
+  }
+  if (mode === 'hang') {
+    return new Promise<Response>((_resolve, reject) => {
+      init?.signal?.addEventListener('abort', () => reject(init.signal!.reason));
+    });
+  }
+  if (mode === 'error') return new Response('<OpenAPI_ServiceResponse>SERVICE_KEY_IS_NOT_REGISTERED_ERROR</OpenAPI_ServiceResponse>');
+  if (url.pathname.endsWith('getNearbyMsrstnList')) {
+    expect(url.searchParams.get('tmX')).toBe('198056.123');
+    return new Response(airJson([{ stationName: '중구', addr: '서울 중구 덕수궁길 15', tm: 0.8 }, { stationName: '종로구', tm: 2.1 }]));
+  }
+  // 실시간 측정값: PM10 1시간 등급 3(나쁨), PM2.5 2(보통) → 나쁜 쪽인 '나쁨'
+  return new Response(
+    airJson([
+      mode === 'noGrade'
+        ? { dataTime: '2026-11-19 18:00', pm10Value: '-', pm25Value: '-', pm10Grade: null, pm25Grade: null }
+        : {
+            dataTime: '2026-11-19 18:00',
+            pm10Value: '85',
+            pm25Value: '30',
+            pm10Grade: '2',
+            pm25Grade: '2',
+            pm10Grade1h: '3',
+            pm25Grade1h: '2',
+          },
+    ]),
+  );
 }
 
 const env = (overrides: Partial<Env> = {}): Env => ({
@@ -108,8 +161,9 @@ describe('/weather', () => {
       rain1hMm: 1.5,
       humidity: 90,
       observedAt: '2026-11-19T18:00+09:00',
-      dust: null,
-      attribution: '날씨: 기상청',
+      dust: 'bad',
+      dustDetail: { pm10: 85, pm25: 30, station: '중구', measuredAt: '2026-11-19 18:00' },
+      attribution: '날씨: 기상청 · 미세먼지: 에어코리아(한국환경공단, 실시간 미확정 자료)',
     });
     const ncst = new URL(kma.calls.find((c) => c.includes('Ncst'))!);
     expect(ncst.searchParams.get('nx')).toBe('60');
@@ -117,6 +171,39 @@ describe('/weather', () => {
     expect(ncst.searchParams.get('base_time')).toBe('1800');
     // Decoding 키는 한 번만 인코딩해서 보낸다.
     expect(kma.calls[0]).toContain('serviceKey=abc%2Bdef%2Fghi%3D%3D&');
+  });
+
+  it('미세먼지를 못 받아도 날씨는 주고 dust는 null', async () => {
+    for (const air of ['error', 'noGrade'] as const) {
+      const { status, body } = await weather(env(), fakeKma({ air }).fetchFn);
+      expect(status, air).toBe(200);
+      expect(body.tempC).toBe(8.7);
+      expect(body.dust).toBeNull();
+      expect(body.dustDetail).toBeNull();
+      expect(body.attribution).toBe('날씨: 기상청');
+    }
+  });
+
+  it('에어코리아가 답하지 않아도 6초 안에 날씨를 준다', async () => {
+    const started = Date.now();
+    const { status, body } = await weather(env(), fakeKma({ air: 'hang' }).fetchFn);
+    expect(status).toBe(200);
+    expect(body.dust).toBeNull();
+    expect(Date.now() - started).toBeLessThan(7000);
+  }, 10_000);
+
+  it('측정소는 격자마다 한 번만 찾는다', async () => {
+    const e = env();
+    const kma = fakeKma();
+    await weather(e, kma.fetchFn);
+    await weather(e, kma.fetchFn, now + 21 * 60_000); // 날씨는 다시 받지만
+    const kakao = kma.airCalls.filter((c) => c.includes('transcoord'));
+    const stations = kma.airCalls.filter((c) => c.includes('getNearbyMsrstnList'));
+    const readings = kma.airCalls.filter((c) => c.includes('RltmMesureDnsty'));
+    expect(kakao).toHaveLength(1); // 측정소는 저장해 둔 것을 쓴다
+    expect(stations).toHaveLength(1);
+    expect(readings).toHaveLength(2); // 측정값은 매번 새로
+    expect(new URL(readings[0]!).searchParams.get('stationName')).toBe('중구');
   });
 
   it('같은 격자는 20분 동안 기상청을 다시 부르지 않는다', async () => {
@@ -177,5 +264,25 @@ describe('/weather', () => {
     const kma = fakeKma();
     await weather(env({ KMA_SERVICE_KEY: 'abc%2Bdef' }), kma.fetchFn);
     expect(kma.calls[0]).toContain('serviceKey=abc%2Bdef&');
+  });
+});
+
+describe('미세먼지 등급', () => {
+  it('PM10·PM2.5 중 나쁜 쪽, 1시간 등급을 먼저 쓴다', async () => {
+    const { gradeLevel, worseLevel } = await import('../src/lib/airkorea');
+    expect(['1', '2', '3', '4', '', null, undefined, '-'].map((g) => gradeLevel(g as string | null))).toEqual([
+      'good',
+      'normal',
+      'bad',
+      'veryBad',
+      null,
+      null,
+      null,
+      null,
+    ]);
+    expect(worseLevel({ pm10Grade: '1', pm25Grade: '4' })).toBe('veryBad');
+    expect(worseLevel({ pm10Grade: '3', pm10Grade1h: '1', pm25Grade: '1' })).toBe('good');
+    expect(worseLevel({ pm10Grade: null, pm25Grade: '2' })).toBe('normal');
+    expect(worseLevel({})).toBeNull();
   });
 });

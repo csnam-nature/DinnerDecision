@@ -171,7 +171,7 @@ class SettingsScreen extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.all(Gap.lg),
             child: Text(
-              '데이터 출처: 카카오(장소), 네이버 지도(지도), 기상청(날씨)\n'
+              '데이터 출처: 카카오(장소), 네이버 지도(지도), 기상청(날씨), 에어코리아(미세먼지)\n'
               '${ref.watch(usesSampleDataProvider) ? '지금은 예시 데이터로 동작해요 · ' : ''}버전 1.0.0',
               style: context.text.bodySmall,
             ),

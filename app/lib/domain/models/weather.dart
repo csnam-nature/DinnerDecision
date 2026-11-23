@@ -6,11 +6,15 @@ enum Sky { clear, partly, cloudy }
 enum DustLevel {
   good('좋음'),
   normal('보통'),
-  bad('나쁨');
+  bad('나쁨'),
+  veryBad('매우나쁨');
 
   const DustLevel(this.label);
 
   final String label;
+
+  /// 나쁨 이상이면 바깥에 오래 있지 않는 편이 좋다 (가까운 곳 추천).
+  bool get isBad => this == bad || this == veryBad;
 }
 
 class Weather {
@@ -25,7 +29,7 @@ class Weather {
   final Precipitation precipitation;
   final Sky sky;
 
-  /// 미세먼지. 모르면 null (아직 에어코리아를 붙이지 않았다).
+  /// 미세먼지 (에어코리아, PM10·PM2.5 중 나쁜 쪽). 모르면 null.
   final DustLevel? dust;
 
   int get tempRounded => tempC.round();

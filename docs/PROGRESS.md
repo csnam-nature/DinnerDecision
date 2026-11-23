@@ -368,7 +368,7 @@ adb logcat -d | Select-String "FileSelector|file_picker|FilePickerUtils|Security
 | 항목 | 상태 | 다음에 할 일 |
 |---|---|---|
 | 백업 **복원** | 파일 고르기(내 휴대폰 › Download)·압축 풀기까지 됐으나 복원이 끝나지 않음. 같은 파일은 테스트에서 정상 복원 | 복원 시 오류 창 내용(복사 버튼)과 `adb logcat` 확인. 대안: '내 파일'에서 공유 → 앱으로 바로 복원 |
-| 미세먼지 | 서버가 `dust: null`, 앱은 표시 안 함 | 에어코리아 측정소 조회(TM 좌표 변환) |
+| 미세먼지 | ✅ 코드 완료 (카카오 TM 변환 → 에어코리아 근접 측정소 → 실시간 값) | 공공데이터포털에서 에어코리아 측정소정보·대기오염정보 활용신청, `npm run db:migrate:remote`, 배포 |
 | 추천 기록(recommendation_logs) | 한 번 추천하는 동안만 넘긴 식당을 뺌 | 2차 |
 | App Check | 서버 검증 코드 완성, `APP_CHECK_MODE=off` | 6단계: Firebase 프로젝트 → 앱 연결 → monitor → enforce |
 | 약관 | 카카오 장소 데이터를 네이버 지도 위에 표시해도 되는지 | 6단계 배포 전 확인 |

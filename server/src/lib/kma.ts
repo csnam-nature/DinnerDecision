@@ -123,9 +123,7 @@ export class KmaClient {
   }
 
   private async get(operation: string, grid: KmaGrid, base: { date: string; time: string }): Promise<KmaItem[]> {
-    // 공공데이터포털 키는 '일반 인증키(Decoding)'를 넣는 것이 원칙이지만,
-    // Encoding 키(이미 %가 들어 있는 값)를 넣어도 두 번 인코딩되지 않게 한다.
-    const key = this.serviceKey.includes('%') ? this.serviceKey : encodeURIComponent(this.serviceKey);
+    const key = encodeDataGoKrKey(this.serviceKey);
     const query = new URLSearchParams({
       pageNo: '1',
       numOfRows: '100',
@@ -180,6 +178,14 @@ export class KmaClient {
     }
     return body.response?.body?.items?.item ?? [];
   }
+}
+
+/**
+ * 공공데이터포털 키를 주소에 넣을 형태로. '일반 인증키(Decoding)'를 넣는 것이 원칙이지만,
+ * Encoding 키(이미 %가 들어 있는 값)를 넣어도 두 번 인코딩되지 않게 한다.
+ */
+export function encodeDataGoKrKey(key: string): string {
+  return key.includes('%') ? key : encodeURIComponent(key);
 }
 
 /** 강수 형태(PTY): 0 없음, 1 비, 2 비/눈, 3 눈, 5 빗방울, 6 빗방울눈날림, 7 눈날림 */

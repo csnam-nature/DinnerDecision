@@ -22,7 +22,8 @@
 {
   "tempC": 8.7, "precipitation": "rain", "sky": "cloudy",
   "rain1hMm": 1.5, "humidity": 90, "observedAt": "2026-11-19T18:00+09:00",
-  "dust": null, "attribution": "날씨: 기상청"
+  "dust": "bad", "dustDetail": { "pm10": 85, "pm25": 30, "station": "중구", "measuredAt": "2026-11-19 18:00" },
+  "attribution": "날씨: 기상청 · 미세먼지: 에어코리아(한국환경공단, 실시간 미확정 자료)"
 }
 ```
 
@@ -30,7 +31,10 @@
 - `sky`: `clear`(맑음) · `partly`(구름많음) · `cloudy`(흐림), 예보를 못 받으면 `null`
 - 위경도를 기상청 격자(5km)로 바꿔 격자 단위로 20분 저장합니다. 좌표는 저장하지 않습니다.
 - 실황은 매시 정각 자료가 40분쯤, 예보는 매시 30분 자료가 45분쯤 나옵니다. 발표 직후라 자료가 없으면 한 시간 전 자료를 씁니다.
-- `dust`(미세먼지)는 아직 붙이지 않아 항상 `null`입니다.
+- `dust`: 미세먼지 등급 `good`(좋음)·`normal`(보통)·`bad`(나쁨)·`veryBad`(매우나쁨). PM10·PM2.5 중 나쁜 쪽, 1시간 등급 우선. 못 받으면 `null`이고 날씨는 그대로 줍니다.
+- `dustDetail`: `{ pm10, pm25, station, measuredAt }` (가까운 에어코리아 측정소의 실시간 값)
+- 미세먼지 순서: 카카오 좌표 변환(위경도 → TM) → 에어코리아 근접 측정소(격자마다 30일 저장) → 측정소 실시간 측정값. 6초 안에 못 받으면 건너뜁니다.
+- 에어코리아 키는 기상청과 같은 공공데이터포털 계정 키를 씁니다(`AIRKOREA_SERVICE_KEY`로 따로 줄 수도 있음). 대신 공공데이터포털에서 **한국환경공단_에어코리아_측정소정보**와 **한국환경공단_에어코리아_대기오염정보**를 각각 활용신청해야 합니다.
 
 `/places` 응답:
 
@@ -193,6 +197,7 @@ D1에 남는 것: 칸 이름(geohash)과 그 칸의 식당 목록, 기상청 격
 | `src/app.ts` | 라우팅, App Check, 호출 제한, 오류 처리 |
 | `src/routes/` | `/places`, `/region`, `/search`, `/weather` |
 | `src/lib/kma.ts`, `kmaGrid.ts` | 기상청 API, 위경도 → 기상청 격자 |
+| `src/lib/airkorea.ts` | 에어코리아 근접 측정소·실시간 미세먼지 |
 | `src/lib/placeSearch.ts` | 영역 분할 검색 |
 | `src/lib/kakao.ts` | 카카오 로컬 API |
 | `src/lib/cellStore.ts` | D1 칸 캐시 |
