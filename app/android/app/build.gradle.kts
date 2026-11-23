@@ -12,7 +12,8 @@ plugins {
 val keystoreProperties =
     java.util.Properties().apply {
         val file = rootProject.file("key.properties")
-        if (file.exists()) file.inputStream().use { load(it) }
+        // UTF-8로 읽는다. 기본(ISO-8859-1)으로 읽으면 경로의 한글(예: D:/02_개인/...)이 깨진다.
+        if (file.exists()) file.reader(Charsets.UTF_8).use { load(it) }
     }
 
 android {
