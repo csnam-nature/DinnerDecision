@@ -105,7 +105,8 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
   /// 예상하지 못한 오류는 내용을 그대로 보여주고 로그에 남긴다. 원인을 알려면 내용이 필요하다.
   Future<void> _fail(String what, Object error, StackTrace stack) async {
     debugPrint('$what: $error\n$stack');
-    ref.read(errorReporterProvider).record(error, stack, reason: what);
+    // 복원 오류에는 기록 내용이 담길 수 있어 종류만 보낸다 (화면에는 자세히 보여준다).
+    ref.read(errorReporterProvider).recordSanitized('backup', error, stack);
     if (!mounted) return;
     await showDialog<void>(
       context: context,

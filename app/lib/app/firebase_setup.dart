@@ -16,10 +16,26 @@ import '../firebase_options.dart';
 /// ```
 const appCheckDebugToken = String.fromEnvironment('APP_CHECK_DEBUG_TOKEN');
 
+/// 개인정보가 담겼을 수 있는 오류 대신 보내는 것: 어디서(area) 어떤 종류(type)의 오류인지만.
+/// 예: DB 오류 메시지에는 저장하려던 기록(식당, 메뉴, 메모)이 들어갈 수 있다.
+class SanitizedError implements Exception {
+  SanitizedError(this.area, Object error) : type = error.runtimeType.toString();
+
+  final String area;
+  final String type;
+
+  @override
+  String toString() => '$area: $type';
+}
+
 /// 처리하지 못한 오류를 어딘가에 남긴다. Firebase가 없으면 아무것도 하지 않는다.
 abstract interface class ErrorReporter {
   /// [reason]은 어디서 났는지 짧게. 위치·기록 내용 같은 개인정보는 넣지 않는다.
   void record(Object error, StackTrace? stack, {String? reason, bool fatal});
+
+  /// 기록 내용이 담겼을 수 있는 오류(백업·복원, 기기 DB)는 이것으로 보낸다.
+  /// 오류 내용은 빼고 종류와 코드 위치만 보낸다. 자세한 내용은 화면과 기기 로그에만 남긴다.
+  void recordSanitized(String area, Object error, StackTrace? stack);
 
   /// 개발용: 시험 오류를 남기고 바로 보낸다.
   Future<void> sendTestReport();
@@ -27,6 +43,9 @@ abstract interface class ErrorReporter {
 
 class NoopErrorReporter implements ErrorReporter {
   const NoopErrorReporter();
+
+  @override
+  void recordSanitized(String area, Object error, StackTrace? stack) {}
 
   @override
   void record(
@@ -65,6 +84,10 @@ class CrashlyticsReporter implements ErrorReporter {
           .catchError((Object e) => debugPrint('오류 보고 실패: $e')),
     );
   }
+
+  @override
+  void recordSanitized(String area, Object error, StackTrace? stack) =>
+      record(SanitizedError(area, error), stack, reason: area);
 
   /// 시험 오류를 기록한다. Crashlytics는 기록한 오류를 **앱을 다시 켤 때** 보낸다.
   @override

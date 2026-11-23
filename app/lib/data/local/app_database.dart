@@ -198,7 +198,10 @@ class AppDatabase extends _$AppDatabase implements LocalStore {
     await delete(mealLogRows).go();
     await delete(restaurantRows).go();
     await batch((b) {
-      b.insertAll(mealLogRows, [for (final l in data.logs) _logRow(l)]);
+      // 같은 번호가 섞여 있어도 복원이 실패하지 않게 덮어쓴다.
+      b.insertAllOnConflictUpdate(mealLogRows, [
+        for (final l in data.logs) _logRow(l),
+      ]);
     });
     for (final r in data.restaurants.values) {
       await _upsertRestaurant(r, excluded: data.excludedIds.contains(r.id));

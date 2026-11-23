@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:archive/archive.dart';
 
+import '../../domain/models/meal_log.dart';
 import 'codec.dart';
 import 'stored_data.dart';
 
@@ -91,10 +92,11 @@ abstract final class Backup {
           Codec.parseRestaurant(r as Map<String, Object?>),
       ];
       final data = StoredData(
-        logs: [
+        // 같은 번호의 기록이 두 번 있으면(직접 고친 파일 등) 뒤의 것을 쓴다.
+        logs: _uniqueById([
           for (final l in json['logs'] as List<Object?>? ?? const [])
             Codec.parseMealLog(l as Map<String, Object?>),
-        ],
+        ]),
         restaurants: {for (final r in restaurants) r.id: r},
         excludedIds: {
           for (final id in json['excludedIds'] as List<Object?>? ?? const [])
@@ -118,6 +120,9 @@ abstract final class Backup {
     }
   }
 }
+
+List<MealLog> _uniqueById(List<MealLog> logs) =>
+    {for (final l in logs) l.id: l}.values.toList();
 
 class BackupException implements Exception {
   const BackupException(this.message);
