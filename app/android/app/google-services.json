@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "958664376605",
+    "project_id": "dinnerdecision-ca59c",
+    "storage_bucket": "dinnerdecision-ca59c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:958664376605:android:3943385bb756ac38b9e1f4",
+        "android_client_info": {
+          "package_name": "kr.naturetec.dinnerdecision"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBbtcY7OWCrezg4fDtj4MI2K_fApAtYZzA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
