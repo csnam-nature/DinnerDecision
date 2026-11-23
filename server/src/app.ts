@@ -7,6 +7,7 @@ import { handlePlaces } from './routes/places';
 import { handleRegion } from './routes/region';
 import { handleSearch } from './routes/search';
 import { handleWeather } from './routes/weather';
+import { PRIVACY_HTML } from './privacy';
 
 export const API_VERSION = '1';
 
@@ -21,6 +22,12 @@ export async function handleRequest(request: Request, env: Env, deps: Deps): Pro
   try {
     if (request.method !== 'GET') throw new ApiError(405, 'METHOD_NOT_ALLOWED', 'GET만 지원합니다');
     if (url.pathname === '/health') return json({ ok: true, version: API_VERSION });
+    // 스토어에 적는 공개 페이지. 브라우저로 열기 때문에 앱 인증·호출 제한을 거치지 않는다.
+    if (url.pathname === '/privacy') {
+      return new Response(PRIVACY_HTML, {
+        headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=3600' },
+      });
+    }
 
     const nowMs = deps.nowMs();
     await checkAppCheck(request, env, nowMs, deps.fetchFn);
@@ -59,7 +66,7 @@ async function checkAppCheck(request: Request, env: Env, nowMs: number, fetchFn?
   try {
     const token = request.headers.get('X-Firebase-AppCheck');
     if (!token) throw new ApiError(401, 'APP_CHECK_FAILED', '앱 인증 토큰이 없습니다');
-    await verifyAppCheckToken(token, {
+    const appId = await verifyAppCheckToken(token, {
       projectNumber: env.FIREBASE_PROJECT_NUMBER,
       appIds: (env.FIREBASE_APP_IDS ?? '')
         .split(',')
@@ -68,6 +75,8 @@ async function checkAppCheck(request: Request, env: Env, nowMs: number, fetchFn?
       nowMs,
       fetchFn,
     });
+    // monitor 모드에서는 통과한 요청도 남겨서, enforce로 올려도 되는지 판단한다.
+    if (mode === 'monitor') console.log(JSON.stringify({ appCheck: 'ok', app: appId }));
   } catch (error) {
     if (mode === 'enforce') throw error;
     console.warn(JSON.stringify({ appCheck: 'failed', mode, error: String(error) }));

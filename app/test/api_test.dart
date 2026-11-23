@@ -95,10 +95,11 @@ void main() {
 
       final request = server.requests.single;
       expect(request.path, '/places');
+      // 위경도는 약 100m 단위로 줄여 보내고, 그만큼 반경을 넓혀 받는다.
       expect(request.queryParameters, {
-        'lat': '37.54460',
-        'lng': '127.05590',
-        'radius': 1000,
+        'lat': '37.545',
+        'lng': '127.056',
+        'radius': 1100,
       });
     });
 
@@ -166,6 +167,22 @@ void main() {
         throwsA(
           isA<ApiException>().having((e) => e.isOffline, 'offline', true),
         ),
+      );
+    });
+
+    test('App Check 토큰을 못 받아도 요청은 보낸다 (헤더만 빠짐)', () async {
+      final server = FakeServer((_) => {'places': [], 'complete': true});
+      final repo = ApiPlaceRepository(
+        client: clientFor(
+          server,
+          token: () async => throw StateError('Play Integrity 실패'),
+        ),
+        mapper: mapper,
+      );
+      await repo.fetchNearby(lat: 37.5, lng: 127, radiusM: 500);
+      expect(
+        server.requests.single.headers.containsKey('X-Firebase-AppCheck'),
+        isFalse,
       );
     });
 

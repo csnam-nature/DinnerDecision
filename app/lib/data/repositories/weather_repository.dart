@@ -1,3 +1,4 @@
+import '../../core/geo.dart';
 import '../../domain/models/weather.dart';
 import '../api/api_client.dart';
 
@@ -34,7 +35,7 @@ class ApiWeatherRepository implements WeatherRepository {
     }
     final body = await _client.get(
       '/weather',
-      query: {'lat': lat.toStringAsFixed(4), 'lng': lng.toStringAsFixed(4)},
+      query: {'lat': coarseCoord(lat), 'lng': coarseCoord(lng)},
     );
     final weather = weatherFromJson(body);
     _last = (key: key, at: now, weather: weather);

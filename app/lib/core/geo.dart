@@ -49,3 +49,12 @@ int walkMinutes(int meters) => math.max(1, (meters / 75).round());
 /// 목록에 보여줄 거리 글자. 1km부터는 소수 한 자리 km.
 String formatDistance(int meters) =>
     meters >= 1000 ? '${(meters / 1000).toStringAsFixed(1)}km' : '${meters}m';
+
+/// 서버로 보내는 위경도. 소수점 3자리(위도 약 110m, 경도 약 90m 단위)로 줄여서
+/// 서버·Cloudflare 기록에 정확한 위치가 남지 않게 한다 (PLAN.md 3.2 개인정보).
+/// 거리 계산은 앱이 가진 정확한 좌표로 한다.
+String coarseCoord(double value) => value.toStringAsFixed(3);
+
+/// 좌표를 줄여서 생기는 오차(최대 약 70m)보다 넉넉한 여유.
+/// 주변 식당은 이만큼 넓게 받아 오고, 정확한 거리로 다시 거른다.
+const coarseMarginM = 100;

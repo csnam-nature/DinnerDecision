@@ -9,6 +9,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import 'app/app.dart';
+import 'app/firebase_setup.dart';
 import 'app/startup_error_app.dart';
 import 'app/widgets/app_map_view.dart';
 import 'app/widgets/naver_map_view.dart';
@@ -20,16 +21,30 @@ import 'data/providers.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // 오류 수집을 가장 먼저 켜야 시작 중에 난 오류도 남는다.
+  final firebase = await initFirebase(serverMode: apiBaseUrl.isNotEmpty);
+  debugPrint('[시작] Firebase ${firebase.enabled ? '사용' : '안 씀'}');
   final List<Override> overrides;
   try {
     overrides = await _startup();
   } on Object catch (e, stack) {
     // 첫 화면에서 멈춰 있지 않고 무엇이 잘못됐는지 보여준다.
     debugPrint('시작 실패: $e\n$stack');
+    firebase.reporter.record(e, stack, reason: 'startup', fatal: true);
     runApp(StartupErrorApp(error: e));
     return;
   }
-  runApp(ProviderScope(overrides: overrides, child: const DinnerDecisionApp()));
+  runApp(
+    ProviderScope(
+      overrides: [
+        ...overrides,
+        firebaseEnabledProvider.overrideWithValue(firebase.enabled),
+        errorReporterProvider.overrideWithValue(firebase.reporter),
+        appCheckTokenProvider.overrideWithValue(firebase.appCheckToken),
+      ],
+      child: const DinnerDecisionApp(),
+    ),
+  );
 }
 
 /// 시작 준비. 어디서 멈추는지 로그로 알 수 있게 단계마다 남긴다.

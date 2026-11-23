@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 
 /// 서버(Cloudflare Workers) 주소. 빌드할 때 넣는다.
 ///
@@ -56,7 +57,7 @@ class ApiClient {
     String path, {
     Map<String, Object?> query = const {},
   }) async {
-    final token = await appCheckToken?.call();
+    final token = await _appCheckToken();
     try {
       final response = await _dio.get<Object?>(
         path,
@@ -70,6 +71,19 @@ class ApiClient {
       return data;
     } on DioException catch (e) {
       throw _toApiException(e);
+    }
+  }
+
+  /// App Check 토큰. 못 받아도 요청은 보낸다 (서버가 monitor 모드면 그대로 처리되고,
+  /// enforce 모드면 401로 알려준다). 앱이 토큰 때문에 멈추지 않게 5초만 기다린다.
+  Future<String?> _appCheckToken() async {
+    final provider = appCheckToken;
+    if (provider == null) return null;
+    try {
+      return await provider().timeout(const Duration(seconds: 5));
+    } on Object catch (e) {
+      debugPrint('App Check 토큰을 받지 못함: $e');
+      return null;
     }
   }
 

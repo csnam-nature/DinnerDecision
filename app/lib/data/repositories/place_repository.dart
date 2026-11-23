@@ -1,3 +1,4 @@
+import '../../core/geo.dart';
 import '../../domain/cuisine_mapper.dart';
 import '../../domain/models/restaurant.dart';
 import '../api/api_client.dart';
@@ -47,9 +48,11 @@ class ApiPlaceRepository implements PlaceRepository {
       body = await _client.get(
         '/places',
         query: {
-          'lat': lat.toStringAsFixed(5),
-          'lng': lng.toStringAsFixed(5),
-          'radius': radiusM,
+          'lat': coarseCoord(lat),
+          'lng': coarseCoord(lng),
+          // 줄인 좌표로 검색해도 반경 끝 식당이 빠지지 않게 넓게 받는다.
+          // 정확한 반경 거르기는 nearbyPlacesProvider가 정확한 좌표로 한다.
+          'radius': radiusM + coarseMarginM,
         },
       );
       if (body['complete'] == true) break;

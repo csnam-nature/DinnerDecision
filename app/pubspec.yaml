@@ -48,6 +48,9 @@ dependencies:
   archive: ^4.7.1
   path: ^1.9.1
   file_picker: ^13.4.0
+  firebase_core: ^5.2.0
+  firebase_crashlytics: ^6.1.0
+  firebase_app_check: ^0.5.2
 dependency_overrides:
   path_provider_android: 2.2.23
 
@@ -64,6 +67,7 @@ dev_dependencies:
   drift_dev: ^2.35.3
   build_runner: ^2.17.1
   fake_async: ^1.3.3
+  flutter_launcher_icons: ^0.14.4
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -89,3 +93,15 @@ flutter:
           weight: 600
         - asset: assets/fonts/Pretendard-Bold.otf
           weight: 700
+
+# 앱 아이콘 (6-4). 원본: assets/icon/ — 바꾼 뒤 `dart run flutter_launcher_icons`
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: assets/icon/icon.png
+  # Android 8+ 모양 맞춤 아이콘: 주황 바탕 + 흰 그릇
+  adaptive_icon_background: "#FF6B35"
+  adaptive_icon_foreground: assets/icon/icon_foreground.png
+  min_sdk_android: 26
+  # App Store 아이콘은 투명 영역이 없어야 한다
+  remove_alpha_ios: true

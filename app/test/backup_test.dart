@@ -1,6 +1,9 @@
 import 'dart:io';
 
+import 'dart:convert';
+
 import 'package:archive/archive.dart';
+import 'package:dinner_decision/app/firebase_setup.dart';
 import 'package:dinner_decision/data/device_files.dart';
 import 'package:dinner_decision/data/local/app_database.dart';
 import 'package:dinner_decision/data/local/backup.dart';
@@ -148,6 +151,45 @@ void main() {
           ),
         ),
       );
+    });
+  });
+
+  group('리뷰 반영: 복원 오류와 개인정보', () {
+    test('같은 번호의 기록이 두 번 있어도 복원된다 (뒤의 것을 씀)', () async {
+      final archive = Archive()
+        ..addFile(
+          ArchiveFile.string(
+            'backup.json',
+            jsonEncode({
+              'app': 'dinner_decision',
+              'format': 1,
+              'logs': [
+                Codec.mealLog(log(1)),
+                {...Codec.mealLog(log(1)), 'memo': '고친 메모'},
+              ],
+              'restaurants': [Codec.restaurant(r1)],
+              'excludedIds': [],
+              'settings': {},
+            }),
+          ),
+        );
+      final decoded = Backup.decode(ZipEncoder().encode(archive));
+      expect(decoded.data.logs, hasLength(1));
+      expect(decoded.data.logs.single.memo, '고친 메모');
+
+      // DB에 같은 번호가 섞여 들어가도 실패하지 않는다.
+      final db = AppDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+      await db.replaceAll(StoredData(logs: [log(1), log(1)]));
+      expect((await db.load()).logs, hasLength(1));
+    });
+
+    test('Crashlytics에는 오류 내용 없이 종류만 보낸다', () {
+      final error = Exception('INSERT failed: 진짬뽕, 메모: 비밀 메모');
+      final sanitized = SanitizedError('backup', error);
+      expect(sanitized.toString(), 'backup: _Exception');
+      expect(sanitized.toString(), isNot(contains('진짬뽕')));
+      expect(sanitized.toString(), isNot(contains('메모')));
     });
   });
 

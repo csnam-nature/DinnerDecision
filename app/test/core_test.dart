@@ -65,4 +65,12 @@ void main() {
       expect(relativeDay(5), '5일 전');
     });
   });
+
+  test('서버로 보내는 좌표는 약 100m 단위로 줄인다', () {
+    expect(coarseCoord(37.48408123), '37.484');
+    expect(coarseCoord(126.87834), '126.878');
+    // 줄여서 생기는 오차(최대 반 칸)는 여유 거리보다 작다.
+    final err = distanceMeters(37.4845, 126.8785, 37.484, 126.878);
+    expect(err, lessThan(coarseMarginM));
+  });
 }

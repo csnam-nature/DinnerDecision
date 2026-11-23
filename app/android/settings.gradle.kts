@@ -20,6 +20,12 @@ pluginManagement {
 plugins {
     id("dev.flutter.flutter-plugin-loader") version "1.0.0"
     id("com.android.application") version "9.3.1" apply false
+    // START: FlutterFire Configuration
+    // 버전은 firebase_core가 권하는 값 (firebase_core pubspec의 *_gradle_plugin_version)
+    id("com.google.gms.google-services") version("4.4.4") apply false
+    // Crashlytics가 빌드 ID를 넣는 플러그인. 없으면 Firebase가 켜진 앱이 시작할 때 꺼진다.
+    id("com.google.firebase.crashlytics") version("3.0.7") apply false
+    // END: FlutterFire Configuration
     id("org.jetbrains.kotlin.android") version "2.4.20" apply false
 }
 
