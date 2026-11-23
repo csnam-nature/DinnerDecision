@@ -41,7 +41,16 @@ export async function handleWeather(url: URL, env: Env, nowMs: number, fetchFn?:
   const body: WeatherResponse = {
     ...weather,
     dust: dust?.level ?? null,
-    dustDetail: dust ? { pm10: dust.pm10, pm25: dust.pm25, station: dust.station, measuredAt: dust.measuredAt } : null,
+    dustDetail: dust
+      ? {
+          pm10: dust.pm10,
+          pm10Level: dust.pm10Level,
+          pm25: dust.pm25,
+          pm25Level: dust.pm25Level,
+          station: dust.station,
+          measuredAt: dust.measuredAt,
+        }
+      : null,
     // 에어코리아 자료는 실시간 관측값이라 검증 전 값일 수 있다 (출처 표시 필요).
     attribution: dust ? '날씨: 기상청 · 미세먼지: 에어코리아(한국환경공단, 실시간 미확정 자료)' : '날씨: 기상청',
   };

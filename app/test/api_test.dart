@@ -260,6 +260,39 @@ void main() {
         '☁️ 흐림 · 9℃ · 미세먼지 나쁨',
       );
       expect(weatherFromJson({...body(), 'dust': 'unknown'}).dust, isNull);
+      // 미세먼지·초미세먼지 수치와 각각의 등급
+      final withAir = weatherFromJson({
+        ...body(),
+        'dust': 'bad',
+        'dustDetail': {
+          'pm10': 85,
+          'pm10Level': 'bad',
+          'pm25': 30.4,
+          'pm25Level': 'normal',
+          'station': '중구',
+          'measuredAt': '2026-11-19 18:00',
+        },
+      });
+      expect(withAir.air?.pm25, 30);
+      expect(withAir.air?.station, '중구');
+      expect(withAir.dustLine, '미세먼지 나쁨 85㎍/㎥ · 초미세먼지 보통 30㎍/㎥');
+      // 점검 중이라 한쪽 값이 없으면 있는 것만
+      expect(
+        weatherFromJson({
+          ...body(),
+          'dust': 'normal',
+          'dustDetail': {
+            'pm10': null,
+            'pm10Level': null,
+            'pm25': 18,
+            'pm25Level': 'normal',
+          },
+        }).dustLine,
+        '초미세먼지 보통 18㎍/㎥',
+      );
+      // 수치가 없으면 등급만, 미세먼지를 모르면 줄이 없음
+      expect(weatherFromJson({...body(), 'dust': 'good'}).dustLine, '미세먼지 좋음');
+      expect(weatherFromJson(body()).dustLine, isNull);
       // 하늘 상태를 못 받았으면 맑음으로 본다.
       expect(
         weatherFromJson(body(precipitation: 'none', sky: null)).sky,

@@ -71,7 +71,10 @@ class NearbyScreen extends ConsumerWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(Gap.lg, 0, Gap.lg, Gap.sm),
-            child: Text(weatherLine(weather), style: context.text.bodySmall),
+            child: WeatherSummary(
+              weather: weather,
+              style: context.text.bodySmall,
+            ),
           ),
           const _CuisineFilterBar(),
           if (!view.mapMode) const _ListTools(),

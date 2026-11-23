@@ -14,9 +14,14 @@ export const AIRKOREA_TIMEOUT_MS = 5000;
 export type DustLevel = 'good' | 'normal' | 'bad' | 'veryBad';
 
 export interface DustReading {
+  /** 미세먼지·초미세먼지 중 나쁜 쪽. */
   level: DustLevel;
+  /** 미세먼지(PM10) 농도 ㎍/㎥와 등급 */
   pm10: number | null;
+  pm10Level: DustLevel | null;
+  /** 초미세먼지(PM2.5) 농도 ㎍/㎥와 등급 */
   pm25: number | null;
+  pm25Level: DustLevel | null;
   station: string;
   /** 예: "2026-11-23 18:00" (한국 시간) */
   measuredAt: string;
@@ -64,12 +69,13 @@ export function gradeLevel(grade: string | null | undefined): DustLevel | null {
 
 const ORDER: DustLevel[] = ['good', 'normal', 'bad', 'veryBad'];
 
-/** PM10과 PM2.5 중 나쁜 쪽. 1시간 등급이 있으면 그것을, 없으면 24시간 등급을 쓴다. */
+/** 1시간 등급이 있으면 그것을, 없으면 24시간 등급을 쓴다. */
+export const pm10Level = (item: ReadingItem) => gradeLevel(item.pm10Grade1h) ?? gradeLevel(item.pm10Grade);
+export const pm25Level = (item: ReadingItem) => gradeLevel(item.pm25Grade1h) ?? gradeLevel(item.pm25Grade);
+
+/** PM10과 PM2.5 중 나쁜 쪽. */
 export function worseLevel(item: ReadingItem): DustLevel | null {
-  const levels = [
-    gradeLevel(item.pm10Grade1h) ?? gradeLevel(item.pm10Grade),
-    gradeLevel(item.pm25Grade1h) ?? gradeLevel(item.pm25Grade),
-  ].filter((l): l is DustLevel => l !== null);
+  const levels = [pm10Level(item), pm25Level(item)].filter((l): l is DustLevel => l !== null);
   if (levels.length === 0) return null;
   return levels.reduce((a, b) => (ORDER.indexOf(a) >= ORDER.indexOf(b) ? a : b));
 }
@@ -111,7 +117,9 @@ export class AirKoreaClient {
     return {
       level,
       pm10: numberOrNull(item.pm10Value),
+      pm10Level: pm10Level(item),
       pm25: numberOrNull(item.pm25Value),
+      pm25Level: pm25Level(item),
       station,
       measuredAt: item.dataTime ?? '',
     };

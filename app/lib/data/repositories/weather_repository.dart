@@ -61,13 +61,29 @@ Weather weatherFromJson(Map<String, dynamic> json) {
       // 하늘 상태를 못 받았으면(null) 맑음으로 둔다. 비·눈은 precipitation으로 따로 안다.
       _ => Sky.clear,
     },
-    dust: switch (json['dust']) {
-      'good' => DustLevel.good,
-      'normal' => DustLevel.normal,
-      'bad' => DustLevel.bad,
-      'veryBad' => DustLevel.veryBad,
-      _ => null,
-    },
+    dust: _dustLevel(json['dust']),
+    air: _airQuality(json['dustDetail']),
+  );
+}
+
+DustLevel? _dustLevel(Object? value) => switch (value) {
+  'good' => DustLevel.good,
+  'normal' => DustLevel.normal,
+  'bad' => DustLevel.bad,
+  'veryBad' => DustLevel.veryBad,
+  _ => null,
+};
+
+AirQuality? _airQuality(Object? value) {
+  if (value is! Map) return null;
+  int? number(Object? v) => v is num ? v.round() : null;
+  return AirQuality(
+    pm10: number(value['pm10']),
+    pm10Level: _dustLevel(value['pm10Level']),
+    pm25: number(value['pm25']),
+    pm25Level: _dustLevel(value['pm25Level']),
+    station: value['station'] as String? ?? '',
+    measuredAt: value['measuredAt'] as String? ?? '',
   );
 }
 

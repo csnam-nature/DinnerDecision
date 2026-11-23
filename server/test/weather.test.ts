@@ -162,7 +162,14 @@ describe('/weather', () => {
       humidity: 90,
       observedAt: '2026-11-19T18:00+09:00',
       dust: 'bad',
-      dustDetail: { pm10: 85, pm25: 30, station: '중구', measuredAt: '2026-11-19 18:00' },
+      dustDetail: {
+        pm10: 85,
+        pm10Level: 'bad',
+        pm25: 30,
+        pm25Level: 'normal',
+        station: '중구',
+        measuredAt: '2026-11-19 18:00',
+      },
       attribution: '날씨: 기상청 · 미세먼지: 에어코리아(한국환경공단, 실시간 미확정 자료)',
     });
     const ncst = new URL(kma.calls.find((c) => c.includes('Ncst'))!);

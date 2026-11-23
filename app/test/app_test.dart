@@ -32,7 +32,8 @@ void main() {
     await pumpApp(tester);
 
     expect(find.text('성수동2가'), findsOneWidget);
-    expect(find.text('☔ 비 · 9℃ · 미세먼지 보통'), findsOneWidget);
+    expect(find.text('☔ 비 · 9℃'), findsOneWidget);
+    expect(find.text('미세먼지 보통'), findsOneWidget); // 예시 날씨는 수치 없이 등급만
     expect(find.text('전체 25'), findsOneWidget);
     expect(find.text('성수 할매순대국'), findsOneWidget);
     expect(find.text('🕘 12일 전 방문'), findsOneWidget);

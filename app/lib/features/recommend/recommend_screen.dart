@@ -96,8 +96,9 @@ class _StartView extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('지금', style: context.text.labelSmall),
-              Text(
-                '${weatherLine(weather)} · 📍 ${location?.name ?? '위치 확인 중'}',
+              WeatherSummary(
+                weather: weather,
+                suffix: ' · 📍 ${location?.name ?? '위치 확인 중'}',
                 style: context.text.bodyMedium,
               ),
               const SizedBox(height: Gap.sm),
