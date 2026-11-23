@@ -49,3 +49,6 @@ app.*.map.json
 
 # 실행 설정 (dart_defines.example.json을 복사해서 값을 넣는다)
 dart_defines.json
+
+# Cloudflare wrangler 캐시 (계정 정보가 들어 있다)
+.wrangler/

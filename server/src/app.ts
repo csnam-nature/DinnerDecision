@@ -59,7 +59,7 @@ async function checkAppCheck(request: Request, env: Env, nowMs: number, fetchFn?
   try {
     const token = request.headers.get('X-Firebase-AppCheck');
     if (!token) throw new ApiError(401, 'APP_CHECK_FAILED', '앱 인증 토큰이 없습니다');
-    await verifyAppCheckToken(token, {
+    const appId = await verifyAppCheckToken(token, {
       projectNumber: env.FIREBASE_PROJECT_NUMBER,
       appIds: (env.FIREBASE_APP_IDS ?? '')
         .split(',')
@@ -68,6 +68,8 @@ async function checkAppCheck(request: Request, env: Env, nowMs: number, fetchFn?
       nowMs,
       fetchFn,
     });
+    // monitor 모드에서는 통과한 요청도 남겨서, enforce로 올려도 되는지 판단한다.
+    if (mode === 'monitor') console.log(JSON.stringify({ appCheck: 'ok', app: appId }));
   } catch (error) {
     if (mode === 'enforce') throw error;
     console.warn(JSON.stringify({ appCheck: 'failed', mode, error: String(error) }));

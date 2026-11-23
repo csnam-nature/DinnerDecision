@@ -78,6 +78,21 @@ flutter test
 
 추천 계산(`lib/domain/recommend/recommend_engine.dart`)은 가짜가 아니라 계획서 9장의 점수표 그대로입니다.
 
+## Firebase (오류 수집·앱 인증, 6단계)
+
+`android/app/google-services.json`(iOS는 `ios/Runner/GoogleService-Info.plist`)이 있으면 Firebase를 켜고,
+없으면 Firebase 없이 지금처럼 동작합니다. 두 파일은 `flutterfire configure`가 만듭니다.
+Android는 `google-services.json`이 있을 때만 Google 서비스·Crashlytics Gradle 플러그인을 씁니다.
+
+| 기능 | 디버그 빌드 | 출시 빌드 |
+|---|---|---|
+| Crashlytics | 자동으로 보내지 않음. 설정 › 개발용 › **Crashlytics 시험 오류 보내기**로 연결 확인 | 처리하지 못한 오류·앱이 꺼지는 오류를 보냄 |
+| App Check | 디버그 토큰 (`APP_CHECK_DEBUG_TOKEN`) | Android Play Integrity, iOS App Attest |
+
+- 보내는 것: 오류 내용·코드 위치, 기기 모델·OS 버전, 모드(server/sample). 위치·기록·사진은 보내지 않습니다.
+- App Check 토큰을 못 받아도 서버 요청은 보냅니다(헤더만 빠짐). 서버가 `monitor`면 그대로 처리됩니다.
+- 실행 로그의 `[시작] Firebase 사용/안 씀`으로 켜졌는지 알 수 있습니다.
+
 ## 기기 DB (drift)
 
 표 정의는 `lib/data/local/app_database.dart`, 자동 생성 코드는 `app_database.g.dart`입니다.

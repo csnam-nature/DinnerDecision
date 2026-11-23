@@ -7,9 +7,12 @@ compatibility_date = "2026-11-01"
 workers_dev = true
 
 [vars]
-# off → monitor → enforce 순서로 올린다. 앱에 App Check를 붙이기 전까지는 off.
-APP_CHECK_MODE = "off"
-FIREBASE_PROJECT_NUMBER = ""
+# off → monitor → enforce 순서로 올린다 (PLAN.md 6단계).
+# monitor: 토큰이 없거나 틀려도 통과시키고 로그만 남긴다 (`npx wrangler tail`에서 appCheck 줄 확인).
+# enforce: Play 내부 테스트로 설치한 앱에서 모두 ok가 나온 뒤에 올린다.
+APP_CHECK_MODE = "monitor"
+# Firebase 콘솔 › 프로젝트 설정 › 일반 › 프로젝트 번호 (비밀값 아님)
+FIREBASE_PROJECT_NUMBER = "958664376605"
 FIREBASE_APP_IDS = ""
 KAKAO_CALL_BUDGET = "40"
 RATE_LIMIT_PER_MINUTE = "30"

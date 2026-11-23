@@ -4,6 +4,14 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Firebase 설정 파일(flutterfire configure가 만듦)이 있을 때만 Google 서비스 플러그인을 쓴다.
+// 없으면 Firebase 없이 빌드되고, 앱은 오류 수집·앱 인증 없이 지금처럼 동작한다.
+// Crashlytics 플러그인이 없으면 Firebase가 켜진 앱이 시작할 때 'build ID is missing'으로 꺼진다.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+    apply(plugin = "com.google.firebase.crashlytics")
+}
+
 android {
     namespace = "kr.naturetec.dinnerdecision"
     compileSdk = flutter.compileSdkVersion

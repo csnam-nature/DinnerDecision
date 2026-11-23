@@ -120,6 +120,26 @@ class SettingsScreen extends ConsumerWidget {
               title: '온보딩 다시 보기',
               onTap: () => context.push(Routes.onboarding),
             ),
+            if (ref.watch(firebaseEnabledProvider))
+              _LinkTile(
+                title: 'Crashlytics 시험 오류 보내기',
+                onTap: () async {
+                  final messenger = ScaffoldMessenger.of(context);
+                  await ref.read(errorReporterProvider).sendTestReport();
+                  messenger.showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        '보냈어요. 몇 분 뒤 Firebase 콘솔 › Crashlytics에서 확인하세요',
+                      ),
+                    ),
+                  );
+                },
+              )
+            else
+              const ListTile(
+                title: Text('Firebase 꺼짐'),
+                subtitle: Text('google-services.json이 없어서 오류 수집·앱 인증 없이 실행 중'),
+              ),
           ],
           const Divider(),
           const SectionLabel('정보'),

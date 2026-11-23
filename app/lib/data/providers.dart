@@ -11,6 +11,7 @@ import '../domain/models/meal_log.dart';
 import '../domain/models/restaurant.dart';
 import '../domain/models/weather.dart';
 import '../domain/recommend/recommend_engine.dart';
+import '../app/firebase_setup.dart';
 import 'api/api_client.dart';
 import 'app_config.dart';
 import 'device_files.dart';
@@ -32,9 +33,25 @@ final appConfigProvider = Provider<AppConfig>(
       throw UnimplementedError('ProviderScope에서 appConfigProvider 값을 넣어야 합니다'),
 );
 
+/// Firebase(오류 수집·앱 인증)를 켰는지. main()에서 넣는다. 테스트와 설정 파일이 없을 때는 false.
+final firebaseEnabledProvider = Provider<bool>((ref) => false);
+
+/// 처리하지 못한 오류를 남기는 곳 (Crashlytics). 기본은 아무것도 하지 않는다.
+final errorReporterProvider = Provider<ErrorReporter>(
+  (ref) => const NoopErrorReporter(),
+);
+
+/// 서버 요청에 붙일 App Check 토큰. Firebase를 켜면 main()에서 넣는다.
+final appCheckTokenProvider = Provider<TokenProvider?>((ref) => null);
+
 /// 서버 클라이언트. 서버 주소(API_BASE_URL) 없이 빌드하면 null이고, 예시 데이터로 동작한다.
 final apiClientProvider = Provider<ApiClient?>(
-  (ref) => apiBaseUrl.isEmpty ? null : ApiClient(baseUrl: apiBaseUrl),
+  (ref) => apiBaseUrl.isEmpty
+      ? null
+      : ApiClient(
+          baseUrl: apiBaseUrl,
+          appCheckToken: ref.watch(appCheckTokenProvider),
+        ),
 );
 
 /// 예시 데이터로 동작하는지. 화면의 '예시 데이터' 안내에 쓴다.

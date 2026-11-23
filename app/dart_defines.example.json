@@ -1,4 +1,5 @@
 {
   "API_BASE_URL": "https://dinner-api.<계정>.workers.dev",
-  "NAVER_MAP_CLIENT_ID": "<네이버 지도 Client ID>"
+  "NAVER_MAP_CLIENT_ID": "<네이버 지도 Client ID>",
+  "APP_CHECK_DEBUG_TOKEN": "<Firebase 콘솔 App Check에 등록한 디버그 토큰>"
 }

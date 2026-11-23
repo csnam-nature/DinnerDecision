@@ -169,6 +169,22 @@ void main() {
       );
     });
 
+    test('App Check 토큰을 못 받아도 요청은 보낸다 (헤더만 빠짐)', () async {
+      final server = FakeServer((_) => {'places': [], 'complete': true});
+      final repo = ApiPlaceRepository(
+        client: clientFor(
+          server,
+          token: () async => throw StateError('Play Integrity 실패'),
+        ),
+        mapper: mapper,
+      );
+      await repo.fetchNearby(lat: 37.5, lng: 127, radiusM: 500);
+      expect(
+        server.requests.single.headers.containsKey('X-Firebase-AppCheck'),
+        isFalse,
+      );
+    });
+
     test('App Check 토큰이 있으면 헤더로 보낸다', () async {
       final server = FakeServer((_) => {'places': [], 'complete': true});
       final repo = ApiPlaceRepository(
