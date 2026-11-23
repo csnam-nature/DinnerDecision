@@ -2,11 +2,10 @@
  * 개인정보처리방침 페이지 (GET /privacy). Play 스토어·App Store에 이 주소를 적는다.
  * 앱이 실제로 하는 일과 맞아야 한다. 동작을 바꾸면 이 내용도 같이 고친다.
  *
- * TODO(출시 전): OPERATOR, CONTACT를 실제 값으로 바꾼다.
  */
 export const PRIVACY_VERSION = '2026-11-23';
-const OPERATOR = '[운영자 이름 또는 회사명]';
-const CONTACT = '[문의 이메일]';
+const OPERATOR = 'naturetec';
+const CONTACT = 'dontforgetcosmos@gmail.com';
 
 export const PRIVACY_HTML = `<!DOCTYPE html>
 <html lang="ko">
@@ -87,7 +86,7 @@ export const PRIVACY_HTML = `<!DOCTYPE html>
 <p>서버와의 통신은 암호화(HTTPS)하고, 외부 서비스 키는 서버에만 보관하며, 정상 앱의 요청만 받도록 앱 인증을 사용합니다.</p>
 
 <h2>9. 개인정보 보호책임자·문의</h2>
-<p>${OPERATOR} · ${CONTACT}</p>
+<p>${OPERATOR} · <a href="mailto:${CONTACT}">${CONTACT}</a></p>
 
 <h2>10. 변경</h2>
 <p>이 방침을 바꾸면 이 페이지와 앱 업데이트 안내로 알립니다.</p>

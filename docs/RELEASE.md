@@ -15,7 +15,7 @@
 > 아이콘을 바꿀 때: `app/assets/icon/`의 그림을 바꾸고 `app` 폴더에서 `dart run flutter_launcher_icons`.
 > ⚠️ 이 도구가 `ios/Runner.xcodeproj/project.pbxproj`의 `ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS`를 `AppIcon`으로 잘못 바꿉니다(값은 `YES`여야 함). 실행한 뒤 이 파일은 되돌리세요: `git checkout -- ios/Runner.xcodeproj/project.pbxproj`
 | 출시용 서명 설정 | `app/android/app/build.gradle.kts` (`key.properties`가 있으면 그 키로 서명) | ✅ 설정 · ⏳ 키 만들기 |
-| 개인정보처리방침 | 서버 `GET /privacy` (`server/src/privacy.ts`), 앱 설정 › 정보 › 개인정보처리방침 | ✅ · ⏳ 운영자 이름·연락처 채우기 |
+| 개인정보처리방침 | 서버 `GET /privacy` (`server/src/privacy.ts`), 앱 설정 › 정보 › 개인정보처리방침 | ✅ 운영자 naturetec, 문의 이메일 반영 · ⏳ 배포 |
 | 스토어 그래픽 이미지 (1024×500), 스토어 아이콘 (512×512) | `docs/store/` | ✅ |
 | 스토어 문안, 데이터 보안 양식 답안 | 이 문서 4·5장 | ✅ 초안 |
 | 출시 빌드 설정 파일 | `app/dart_defines.release.example.json` | ✅ |
@@ -183,7 +183,7 @@ adb exec-out screencap -p > screenshot1.png
 
 | 항목 | 내용 |
 |---|---|
-| 개인정보처리방침 빈칸 | `server/src/privacy.ts`의 `OPERATOR`(운영자 이름·회사명), `CONTACT`(문의 이메일) 채우고 배포 |
+| 개인정보처리방침 | ✅ 운영자·문의 이메일 반영. 앱 동작을 바꾸면 `server/src/privacy.ts`도 같이 고치고 배포 |
 | 위치정보법 | 이용자의 위치로 서비스를 제공하는 경우 **위치기반서비스사업 신고** 대상인지 확인 필요 (방송통신위원회, 한국인터넷진흥원 위치정보지원센터 안내). 공개 출시 전에 확인 |
 | 약관 | 카카오 장소 데이터를 네이버 지도 위에 표시해도 되는지 (PLAN.md 12장) |
 | 출처 표시 | 앱 목록 하단 "장소 정보: 카카오", 설정 화면 데이터 출처 (카카오·네이버 지도·기상청) |

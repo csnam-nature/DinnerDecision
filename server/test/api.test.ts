@@ -39,6 +39,8 @@ describe('API', () => {
     const html = await response.text();
     expect(html).toContain('개인정보처리방침');
     expect(html).toContain('저장하거나 기록하지 않습니다');
+    expect(html).toContain('naturetec');
+    expect(html).not.toContain('[운영자');
   });
 
   it('/places 는 식당 목록과 출처를 준다', async () => {

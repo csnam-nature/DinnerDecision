@@ -454,7 +454,7 @@ settings
 | 6-2 | Crashlytics: 처리하지 못한 오류·시작 실패·백업 오류 보고, 디버그 빌드는 시험 오류만 | 코드 | ✅ 실기기에서 시험 오류 확인 |
 | 6-3 | App Check: 디버그 토큰 / Play Integrity / App Attest, 토큰을 서버 요청 헤더에, 서버 `APP_CHECK_MODE=monitor` | 코드 | ✅ 실기기에서 `appCheck: ok` 확인 |
 | 6-3a | 개인정보: 요청 주소에 정확한 좌표가 Cloudflare 로그로 남던 문제 → 앱이 좌표를 약 100m 단위로 줄여 보냄(반경 +100m로 받고 기기에서 정확히 거름), 서버 요청 기록(invocation logs) 끔 | 코드 | ✅ 실기기 확인 |
-| 6-4 | 출시 준비: 아이콘, 서명 설정, 개인정보처리방침(`/privacy`), 스토어 문안·그래픽, 데이터 보안 양식 답안 ([`RELEASE.md`](./RELEASE.md)) | 함께 | ✅ 준비 완료 · ⏳ 서명 키 만들기, 방침 운영자·연락처, 스크린샷 |
+| 6-4 | 출시 준비: 아이콘, 서명 설정, 개인정보처리방침(`/privacy`), 스토어 문안·그래픽, 데이터 보안 양식 답안 ([`RELEASE.md`](./RELEASE.md)) | 함께 | ✅ 준비 완료 · ⏳ 서명 키 만들기, 스크린샷 |
 | 6-5 | Play 내부 테스트, Play 앱 서명 SHA-256 등록 → 서버 `enforce` | 사용자 → 코드 | ⏳ (Play 개발자 계정 필요) |
 | 6-6 | 백업 복원 문제, 약관 확인, CPU 실측 | 함께 | ⏳ |
 | 6-7 | iOS 빌드(맥북에서 `flutterfire configure` 다시 실행해 plist 생성) → TestFlight | 사용자 | ⏳ |
